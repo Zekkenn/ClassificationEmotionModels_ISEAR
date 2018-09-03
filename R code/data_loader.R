@@ -1,4 +1,4 @@
-setwd("/home/suntse/Documents/Universidad/trab_dir/ClassificationEmotionModels_ISEAR")
+#setwd("/home/suntse/Documents/Universidad/trab_dir/ClassificationEmotionModels_ISEAR")
 
 file <- "py_isear_dataset/isear.csv"
 #mat <- read.csv(file, header = TRUE, sep = "|", dec = ".")
@@ -20,6 +20,22 @@ library(readr)
 # get_data <- function(labels_data){
 #   return( mat[,labels_data] )
 # }
+
+# GET TRAIN, TEST AND VALIDATION DATA TURNED INTO THE BAG OF WORDS
+get.bagOfWords.allPartData <- function(path = ""){
+  
+  # GET THE BAG OF WORDS AND ITS LABELS
+  data <- getPreproc.Data.ISEAR(path)
+  levels( data$EMOT ) <- list("1" = "joy", "2" = "fear", "3" = "anger", "4" = "sadness", "5" = "disgust", "6" = "shame", "7" = "guilt")
+  data$EMOT <- as.numeric(data$EMOT)
+  bagOfWords <- cbind( bag.of.words(data), data$EMOT )
+  colnames( bagOfWords )[ ncol(bagOfWords) ] <- "labels"
+  
+  # PARTITION THE DATA
+  data <- partition.data( c(0.6, 0.8, 1), bagOfWords )
+    
+  return(data)
+}
 
 # Get All Data without noise ---> EMOT label -> emotion tag
 # SIT label -> Text
