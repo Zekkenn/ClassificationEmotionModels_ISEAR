@@ -29,10 +29,12 @@ get.bagOfWords.allPartData <- function(path = ""){
   levels( data$EMOT ) <- list("1" = "joy", "2" = "fear", "3" = "anger", "4" = "sadness", "5" = "disgust", "6" = "shame", "7" = "guilt")
   data$EMOT <- as.numeric(data$EMOT)
   bagOfWords <- cbind( bag.of.words(data), data$EMOT )
-  colnames( bagOfWords )[ ncol(bagOfWords) ] <- "labels"
+  colnames( bagOfWords )[ ncol(bagOfWords) ] <- "labels_model"
+  bagOfWords <- as.data.frame(bagOfWords)
+  bagOfWords$labels_model <- factor(bagOfWords$labels_model)
   
   # PARTITION THE DATA
-  data <- partition.data( c(0.6, 0.8, 1), bagOfWords )
+  data <- partition.data( c(0.8, 1), bagOfWords )
     
   return(data)
 }
