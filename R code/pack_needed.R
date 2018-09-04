@@ -14,6 +14,9 @@ install.packages("gmodels")
 install.packages("ROCR")
 install.packages("e1071")
 # install.packages("RTextTools")
+install.packages("neuralnet")
+install.packages("nnet")
+install.packages("ggplot2")
 
 # ================================================================== #
 # == Uncomment when you need == #
