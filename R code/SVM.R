@@ -2,12 +2,12 @@
 
 library(psych)
 library(kernlab)
-library(R.matlab)
+# library(R.matlab)
 library(gmodels)
 library(ROCR)
 library(caret)
 library(e1071)
-library(RTextTools)
+# library(RTextTools)
 
 # ================================================================== #
 # == Uncomment when you need - Be careful with the number of cores== #
@@ -22,7 +22,9 @@ library(RTextTools)
 # workers=makeCluster(4,type="SOCK")
 # registerDoParallel(workers)
 
-train.svm <- function(data.train){
+train.svm <- function(data.train, type = "svmLinear"){
   ctrl <- trainControl(method = "cv", number = 6)
-  svm_linear <- train( labels_model ~ ., data = data[[1]], method = "svmLinear", trControl = ctrl, tuneLength = 6 )
+  grid <- expand.grid(C = c(0.05, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5))
+  svm.model <- train( labels_model ~ ., data = data[[1]], method = type, trControl = ctrl, tuneGrid = grid )
+  return(svm.model)
 }
