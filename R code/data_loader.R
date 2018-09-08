@@ -3,13 +3,13 @@
 file <- "py_isear_dataset/isear.csv"
 #mat <- read.csv(file, header = TRUE, sep = "|", dec = ".")
 
-library(qdap)
-library(tm)
-library(SnowballC)
-library(wordcloud)
-library(RColorBrewer)
-library(caret)
-library(readr)
+# library(qdap)
+# library(tm)
+# library(SnowballC)
+# library(wordcloud)
+# library(RColorBrewer)
+# library(caret)
+# library(readr)
 
 # DATA MAIN
 
