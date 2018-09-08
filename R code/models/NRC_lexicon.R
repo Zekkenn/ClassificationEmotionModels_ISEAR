@@ -20,14 +20,23 @@ nrc_analysis <- function(data){
   predict_emot <- data.frame( EMOT = colnames(nrc_prob)[max.col(nrc_prob,ties.method="first")])
   
   # CONFUSION MATRIX
-  isear.filter$EMOT <- factor(isear.filter$EMOT, levels = c("joy","fear","anger","sadness","disgust","other")) # RELATED LABELS WITH NRC
-  cm <- confusionMatrix(predict_emot$EMOT,isear.filter$EMOT)
+  data$EMOT <- factor(data$EMOT, levels = c("joy","fear","anger","sadness","disgust","other")) # RELATED LABELS WITH NRC
+  cm <- confusionMatrix(predict_emot$EMOT,data$EMOT)
   
   # PLOTS
   nrc_plots(nrc_data,cm)
 }
 
 nrc_plots <- function(nrc_data, conf.matrix){
+  
+  # GENERAL - EMOTIONAL WORDS FOUNDED - COUNT
+  td<-data.frame(t(nrc_data))
+  td_new <- data.frame(rowSums(td))
+  names(td_new)[1] <- "count"
+  td_new <- cbind("emotion" = rownames(td_new), td_new)
+  rownames(td_new) <- NULL
+  p <- qplot(emotion, data=td_new, weight=count, geom="bar",fill=emotion)+ggtitle("ISEAR Emotions words detected")
+  print(p)
   
   # GENERAL - EMOTIONAL WORDS FOUNDED - PERCENTAGE
   barplot(
@@ -38,17 +47,9 @@ nrc_plots <- function(nrc_data, conf.matrix){
     main = "Emotions Percentage in ISEAR", xlab="Percentage"
   )
   
-  # GENERAL - EMOTIONAL WORDS FOUNDED - COUNT
-  td<-data.frame(t(nrc_data))
-  td_new <- data.frame(rowSums(td[2:7945]))
-  names(td_new)[1] <- "count"
-  td_new <- cbind("emotion" = rownames(td_new), td_new)
-  rownames(td_new) <- NULL
-  qplot(emotion, data=td_new, weight=count, geom="bar",fill=emotion)+ggtitle("ISEAR Emotions words detected")
-  
   # Confusion Matrix
-  plot(conf.matrix$table)
-  str(conf.matrix)
+  plot(conf.matrix$table, main = "Confusion Matrix")
+  conf.matrix
 }
 
 
