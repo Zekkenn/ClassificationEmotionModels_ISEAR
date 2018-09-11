@@ -19,6 +19,7 @@ install.packages("nnet")
 install.packages("ggplot2")
 install.packages("syuzhet")
 install.packages("mldr")
+install.packages("plotly")
 
 # ================================================================== #
 # == Uncomment when you need == #
