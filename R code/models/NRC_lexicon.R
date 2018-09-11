@@ -6,6 +6,8 @@ library(syuzhet)
 library(ggplot2)
 library(mldr)
 
+source('~/ClassificationEmotionModels_ISEAR/R code/data_exploration.R')
+
 # NRC EMOTION ANALYSIS
 
 nrc_analysis <- function(data){
@@ -25,6 +27,7 @@ nrc_analysis <- function(data){
   cm <- confusionMatrix(predict_emot$EMOT,data$EMOT)
   
   # PLOTS
+  visualize_data(predict_emot$EMOT)
   nrc_plots(nrc_data,cm)
 }
 
