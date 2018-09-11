@@ -17,6 +17,7 @@ install.packages("e1071")
 install.packages("neuralnet")
 install.packages("nnet")
 install.packages("ggplot2")
+install.packages("plotly")
 
 # ================================================================== #
 # == Uncomment when you need == #
