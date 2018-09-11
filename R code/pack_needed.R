@@ -17,6 +17,8 @@ install.packages("e1071")
 install.packages("neuralnet")
 install.packages("nnet")
 install.packages("ggplot2")
+install.packages("syuzhet")
+install.packages("mldr")
 
 # ================================================================== #
 # == Uncomment when you need == #

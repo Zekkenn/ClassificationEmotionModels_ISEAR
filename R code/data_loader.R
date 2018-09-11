@@ -109,19 +109,19 @@ preproccess.ISEAR <- function(isear.data){
   isear.docs <- tm_map(isear.docs, removePunctuation) # Remove punctuations
   isear.docs <- tm_map(isear.docs, stripWhitespace) # Eliminate extra white spaces
   
-  isear.docs <- tm_map(isear.docs, stemDocument) # Text stemming (reduces words to their root form)
+  #isear.docs <- tm_map(isear.docs, stemDocument) # Text stemming (reduces words to their root form)
   isear.docs <- tm_map(isear.docs, removeWords, c("clintonemailcom", "stategov", "hrod")) # Remove additional stopwords
   
   # ========== UNCOMMENT THE NEXT LINES FOR WORDCLOUD WARN : SLOW COMP TIME =================
   # FRECUENCY MATRIX OF WORDS
-  # dtm <- TermDocumentMatrix(isear.docs)
-  # isear.freq <- as.matrix(dtm)
-  # isear.freq <- sort(rowSums(isear.freq),decreasing=TRUE)
-  # isear.freq <- data.frame(word = names(isear.freq),freq=isear.freq)
+  dtm <- TermDocumentMatrix(isear.docs)
+  isear.freq <- as.matrix(dtm)
+  isear.freq <- sort(rowSums(isear.freq),decreasing=TRUE)
+  isear.freq <- data.frame(word = names(isear.freq),freq=isear.freq)
   
   
   # GENERATE WORDCLOUD
-  #generate.wordcloud(isear.freq, "ISEARS's  words - Most Used")
+  generate.wordcloud(isear.freq, "ISEARS's  words - Most Used")
   # =========================================================================================
   
   # GET STEMMING SENTENCES BACK TO ISEAR.DATA
