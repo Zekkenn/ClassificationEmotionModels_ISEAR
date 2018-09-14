@@ -42,6 +42,10 @@ getPreproc.Data.ISEAR <- function(path = ""){
 # DATA PRE_PROCESS
 preproccess.ISEAR <- function(isear.data){
   
+  # DELETE ROWS WITH 1 LENGTH SENTENCES
+  pos <- which(sapply(tokenize_words(isear.data$SIT), length) == 1)
+  isear.data <- isear.data[-pos,]
+  
   # DELETE ALL NON-ALPHANUMERIC CHARACTERS & additional whitespace
   isear.data$SIT <- sapply(isear.data$SIT, function(x) gsub("[^a-zA-Z0-9']", " ", x)) # non-alphanumeric characters
   isear.data$SIT <- sapply(isear.data$SIT, function(x) gsub("\\s+", " ", x)) # additional whitespace

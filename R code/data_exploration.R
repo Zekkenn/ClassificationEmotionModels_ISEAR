@@ -79,3 +79,32 @@ generate.wordcloud <- function(sentences, data.title = "Most Used Words"){
   dev.off()
 }
 
+
+# COMPARATIVE ANALYSIS: DATA VS PRE.PROC.DATA
+compare.data <- function(dataX, dataY, Pre.dataX, Pre.dataY){
+  
+  isear.data <- isear.data[-pos,]
+  # WORD IN SENTENCES
+  words.data <- tokenize_words(dataX)
+  words.Pre.data <- tokenize_words(Pre.dataX)
+  
+  pos <- which(sapply(words.data, length) == 1)
+  
+  words.comp <- plot_ly(x = rep(1:length(words.data[-pos])), y = sapply(words.data[-pos], length), type = "scatter", mode = "lines", name = 'Normal Data') %>%
+    add_trace(y = sapply(words.Pre.data, length), name = 'PreProc Data') %>%
+    add_trace(y = ~mean(sapply(words.data[-pos], length)), name = paste('Normal Mean: ', mean(sapply(words.data[-pos], length))), line = list(color = 'rgb(12, 105, 24)', width = 2, dash = 'dash')) %>%
+    add_trace(y = ~min(sapply(words.data[-pos], length)), name = paste('Normal Min: ', min(sapply(words.data[-pos], length))), line = list(color = 'rgb(12, 105, 24)', width = 2, dash = 'dot')) %>%
+    add_trace(y = ~max(sapply(words.data[-pos], length)), name = paste('Normal Max: ', max(sapply(words.data[-pos], length))), line = list(color = 'rgb(12, 105, 24)', width = 2)) %>%
+    add_trace(y = ~mean(sapply(words.Pre.data, length)), name = paste('PreProc Mean: ', mean(sapply(words.Pre.data, length))), line = list(color = 'rgb(205, 12, 24)', width = 2, dash = 'dash')) %>%
+    add_trace(y = ~min(sapply(words.Pre.data, length)), name = paste('PreProc Min: ', min(sapply(words.Pre.data, length))), line = list(color = 'rgb(205, 12, 24)', width = 2, dash = 'dot')) %>%
+    add_trace(y = ~max(sapply(words.Pre.data, length)), name = paste('PreProc Max: ', max(sapply(words.Pre.data, length))), line = list(color = 'rgb(205, 12, 24)', width = 2)) %>%
+    layout(yaxis = list(title = 'Number of Words'), barmode = 'group')
+  print(words.comp)
+  
+  # WORDS BY EMOTIONS
+  words.comp.byEmot <- plot_ly(ggplot2::diamonds, x = Pre.dataY, y = sapply(words.data[-pos], length), type = "box", name = "Normal") %>%
+    add_trace(ggplot2::diamonds, x = Pre.dataY, y = sapply(words.Pre.data, length), type = "box", name = "PreProc") %>%
+    layout(boxmode = "group")
+  print(words.comp.byEmot)
+  
+}
