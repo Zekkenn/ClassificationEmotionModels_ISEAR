@@ -33,7 +33,8 @@ explore.data <- function(sentences,emotions){
 #   Receives a vector labels... [joy, joy, fear, joy, anger, ...]
 visualize_data <- function(test){
   test_frame <- subset(as.data.frame(table(test)), Freq != 0)
-  p <- plot_ly(test_frame, x = test_frame$test, y = test_frame$Freq, type = 'bar') %>%
+  pal <- c("red", "blue", "green")
+  p <- plot_ly(test_frame, x = test_frame$test, y = test_frame$Freq, type = 'bar', color = ~test_frame$test) %>%
     layout(title = "Distribución de Emociones", 
            xaxis = list(title = "Frecuencia de Apariciones"), 
            yaxis = list(title = "Emociones"))

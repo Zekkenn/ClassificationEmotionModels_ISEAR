@@ -20,6 +20,9 @@ install.packages("ggplot2")
 install.packages("syuzhet")
 install.packages("mldr")
 install.packages("plotly")
+install.packages("tokenizers")
+install.packages("plotly")
+install.packages("tidyverse")
 
 # ================================================================== #
 # == Uncomment when you need == #

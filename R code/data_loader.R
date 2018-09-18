@@ -4,7 +4,8 @@ library(SnowballC)
 library(wordcloud)
 library(RColorBrewer)
 library(caret)
-#library(readr)
+library(readr)
+library(tokenizers)
 
 # ================================ DATA MAIN ==============================================
 
