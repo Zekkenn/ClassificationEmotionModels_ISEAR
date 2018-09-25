@@ -23,6 +23,7 @@ install.packages("plotly")
 install.packages("tokenizers")
 install.packages("plotly")
 install.packages("tidyverse")
+install.packages("multiROC")
 
 # ================================================================== #
 # == Uncomment when you need == #
