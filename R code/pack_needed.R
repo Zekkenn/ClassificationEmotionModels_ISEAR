@@ -25,6 +25,8 @@ install.packages("plotly")
 install.packages("tidyverse")
 install.packages("multiROC")
 
+install.packages("dummies")
+
 # ================================================================== #
 # == Uncomment when you need == #
 

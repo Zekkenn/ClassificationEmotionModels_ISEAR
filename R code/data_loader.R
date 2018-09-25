@@ -63,7 +63,7 @@ preproccess.ISEAR <- function(isear.data){
   isear.docs <- tm_map(isear.docs, stripWhitespace) # Eliminate extra white spaces
   
   isear.docs <- tm_map(isear.docs, stemDocument) # Text stemming (reduces words to their root form)
-  isear.docs <- tm_map(isear.docs, removeWords, c("clintonemailcom", "stategov", "hrod")) # Remove additional stopwords
+  #isear.docs <- tm_map(isear.docs, removeWords, c("clintonemailcom", "stategov", "hrod")) # Remove additional stopwords
   
   # GET STEMMING SENTENCES BACK TO ISEAR.DATA
   isear.data$SIT <- sapply(isear.docs, identity)
@@ -81,9 +81,21 @@ preproccess.ISEAR <- function(isear.data){
 # ========================= DATA FOR TRAINING ML MODELS ====================================
 
 # CREATE THE BAG OF WORDS
-bag.of.words <- function(isear.data){
-  isear.docs <- Corpus(VectorSource(isear.data$SIT))
-  isear.dtm <- DocumentTermMatrix(isear.docs)
+bag.of.words <- function(isear.data, sparse = 0.999, train = TRUE){
+  isear.docs <- Corpus(VectorSource(isear.data))
+  words.dict <- list()
+  if ( train == TRUE ){
+    #Remove Sparse Terms
+    isear.dtm <- DocumentTermMatrix(isear.docs)
+    isear.dtm <- removeSparseTerms(isear.dtm, sparse)
+    words.dict <- findFreqTerms(isear.dtm, 1)
+    d <- lapply(words.dict, write, file="dict.txt", append=F)
+    d <- NULL
+  } else {
+    words.dict <- scan("dict.txt", what = character())
+    isear.dtm <- DocumentTermMatrix(isear.docs, list( dictionary = words.dict ))
+  }
+  
   mat <- as.matrix(isear.dtm)
   return(mat)
 }
@@ -95,7 +107,7 @@ get.bagOfWords.allPartData <- function(path = ""){
   data <- getPreproc.Data.ISEAR(path)
   levels( data$EMOT ) <- list("1" = "joy", "2" = "fear", "3" = "anger", "4" = "sadness", "5" = "disgust", "6" = "shame", "7" = "guilt")
   data$EMOT <- as.numeric(data$EMOT)
-  bagOfWords <- cbind( bag.of.words(data), data$EMOT )
+  bagOfWords <- cbind( bag.of.words(data$SIT), data$EMOT )
   colnames( bagOfWords )[ ncol(bagOfWords) ] <- "labels_model"
   bagOfWords <- as.data.frame(bagOfWords)
   bagOfWords$labels_model <- factor(bagOfWords$labels_model)

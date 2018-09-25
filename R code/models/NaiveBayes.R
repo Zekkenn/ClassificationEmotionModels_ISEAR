@@ -2,6 +2,7 @@
 
 library(e1071)
 library(multiROC)
+library(dummies)
 
 train.naiveBayes <- function( data ){
   return( naiveBayes( labels_model ~ .,  data = data ) )
@@ -21,7 +22,7 @@ plot.roc <- function(true_label, pred){
   
   pred <- data.frame(pred)
   colnames(pred) <- c("joy", "fear", "anger", "sadness", "disgust", "shame", "guilt")
-  colnames(pred) <- paste(colnames(pred), "_pred_NaiveBayes")
+  colnames(pred) <- paste(colnames(pred), "_pred_NeuralNet")
   final_df <- cbind(true_label, pred)
   roc_res <- multi_roc(final_df, force_diag=T)
   
