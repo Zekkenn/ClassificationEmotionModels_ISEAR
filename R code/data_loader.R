@@ -63,7 +63,6 @@ preproccess.ISEAR <- function(isear.data){
   isear.docs <- tm_map(isear.docs, stripWhitespace) # Eliminate extra white spaces
   
   isear.docs <- tm_map(isear.docs, stemDocument) # Text stemming (reduces words to their root form)
-  isear.docs <- tm_map(isear.docs, removeWords, c("clintonemailcom", "stategov", "hrod")) # Remove additional stopwords
   
   # GET STEMMING SENTENCES BACK TO ISEAR.DATA
   isear.data$SIT <- sapply(isear.docs, identity)
