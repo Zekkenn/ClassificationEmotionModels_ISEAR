@@ -2,9 +2,9 @@ library(qdap)
 library(tm)
 library(SnowballC)
 library(wordcloud)
-library(RColorBrewer)
+#library(RColorBrewer)
 library(caret)
-library(readr)
+#library(readr)
 library(tokenizers)
 
 # ================================ DATA MAIN ==============================================
