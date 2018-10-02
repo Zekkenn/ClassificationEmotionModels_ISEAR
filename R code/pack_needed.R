@@ -27,6 +27,9 @@ install.packages("multiROC")
 
 install.packages("dummies")
 
+install.packages("tidytext")
+install.packages("maxent")
+
 # ================================================================== #
 # == Uncomment when you need == #
 

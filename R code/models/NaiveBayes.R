@@ -5,11 +5,9 @@ library(multiROC)
 library(dummies)
 
 train.naiveBayes <- function( data ){
-  return( naiveBayes( labels_model ~ .,  data = data ) )
-}
-
-predict.naiveBayes <- function( model, data ){
-  return( predict( model, data, type = 'raw' ) )
+  x <- subset( data, select = -labels_model )
+  y <- data$labels_model
+  return( naiveBayes( x, y ) )
 }
 
 #
@@ -41,3 +39,10 @@ plot.roc <- function(true_label, pred){
   
   
 }
+
+# Test 
+# data <- get.bagOfWords.allPartData("py_isear_dataset/isear.csv")
+# model.naivebayes <- train.naiveBayes(data[[1]])
+# test <- subset( data[[1]], select = -labels_model )
+
+# 

@@ -6,6 +6,7 @@ library(wordcloud)
 library(caret)
 #library(readr)
 library(tokenizers)
+library(dplyr)
 
 # ================================ DATA MAIN ==============================================
 
@@ -48,18 +49,19 @@ preproccess.ISEAR <- function(isear.data){
   isear.data <- isear.data[-pos,]
   
   # DELETE ALL NON-ALPHANUMERIC CHARACTERS & additional whitespace
-  isear.data$SIT <- sapply(isear.data$SIT, function(x) gsub("[^a-zA-Z0-9']", " ", x)) # non-alphanumeric characters
-  isear.data$SIT <- sapply(isear.data$SIT, function(x) gsub("\\s+", " ", x)) # additional whitespace
-  isear.data$SIT <- sapply(isear.data$SIT, function(x) gsub(" $", "", x)) # end Whitespace
+  #isear.data$SIT <- sapply(isear.data$SIT, function(x) gsub("[^a-zA-Z0-9']", " ", x)) # non-alphanumeric characters
+  #isear.data$SIT <- sapply(isear.data$SIT, function(x) gsub("\\s+", " ", x)) # additional whitespace
+  #isear.data$SIT <- sapply(isear.data$SIT, function(x) gsub(" $", "", x)) # end Whitespace
   
   # LOWER CASE
-  isear.data$SIT <- sapply(isear.data$SIT, tolower)
+  # isear.data$SIT <- sapply(isear.data$SIT, tolower)
   
   # TM - STEMMING
   isear.docs <- Corpus(VectorSource(isear.data$SIT))
-  isear.docs <- tm_map(isear.docs, removeNumbers) # Remove numbers
-  isear.docs <- tm_map(isear.docs, removeWords, stopwords("english")) # Remove english common stopwords e.g "the", "is", "of", etc
-  isear.docs <- tm_map(isear.docs, removePunctuation) # Remove punctuations
+  isear.docs <- tm_map(isear.docs, content_transformer(removeNumbers)) # Remove numbers
+  isear.docs <- tm_map(isear.docs, content_transformer(tolower)) # Transform words to lower
+  isear.docs <- tm_map(isear.docs, content_transformer(removeWords), stopwords("english")) # Remove english common stopwords e.g "the", "is", "of", etc
+  isear.docs <- tm_map(isear.docs, content_transformer(removePunctuation)) # Remove punctuations
   isear.docs <- tm_map(isear.docs, stripWhitespace) # Eliminate extra white spaces
   
   isear.docs <- tm_map(isear.docs, stemDocument) # Text stemming (reduces words to their root form)
@@ -97,6 +99,7 @@ bag.of.words <- function(isear.data, sparse = 0.999, train = TRUE){
   }
   
   mat <- as.matrix(isear.dtm)
+
   return(mat)
 }
 
@@ -107,7 +110,15 @@ get.bagOfWords.allPartData <- function(path = ""){
   data <- getPreproc.Data.ISEAR(path)
   levels( data$EMOT ) <- list("1" = "joy", "2" = "fear", "3" = "anger", "4" = "sadness", "5" = "disgust", "6" = "shame", "7" = "guilt")
   data$EMOT <- as.numeric(data$EMOT)
-  bagOfWords <- cbind( bag.of.words(data$SIT), data$EMOT )
+  
+  mat <- bag.of.words(data$SIT, sparse = 0.99)
+  # Delete all rows that have all columns in zero and normalize
+  row_sub <- apply(mat, 1, function(row) all(row ==0 ))
+  mat <- mat[!row_sub,]
+  mat <- scale(mat)
+  
+  bagOfWords <- cbind( mat, data$EMOT[!row_sub] )
+  
   colnames( bagOfWords )[ ncol(bagOfWords) ] <- "labels_model"
   bagOfWords <- as.data.frame(bagOfWords)
   bagOfWords$labels_model <- factor(bagOfWords$labels_model)
@@ -122,6 +133,7 @@ get.bagOfWords.allPartData <- function(path = ""){
 # PARTITIONED DATA TO TRAIN
 partition.data <- function(values, data){
   size <- dim(data)[1]
+  data <- data[ sample(nrow(data), nrow(data)), ]
   values <- values*size
   values <- append(values, c(1), after = 0)
   data_part <- c()
