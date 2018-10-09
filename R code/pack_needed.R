@@ -30,6 +30,11 @@ install.packages("dummies")
 install.packages("tidytext")
 install.packages("maxent")
 
+install.packages("expm")
+install.packages("markovchain")
+install.packages("diagram")
+install.packages("pracma")
+
 # ================================================================== #
 # == Uncomment when you need == #
 
