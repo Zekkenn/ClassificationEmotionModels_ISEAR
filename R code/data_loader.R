@@ -7,10 +7,39 @@ library(caret)
 #library(readr)
 library(tokenizers)
 library(dplyr)
+library("XML")
+library("methods")
+library(plyr)
+# GET ALL DATA WITHOUT NOISE
+#   EMOT label -> emotion tag
+#   SIT label -> Text
 
-# ================================ DATA MAIN ==============================================
+# ==========================================================================================
+# ================================ MAIN PREPARED DATA ======================================
+# ==========================================================================================
 
-# DATA TO OBTAIN
+# OBTAIN & PREPROCESS
+# type <- should be one of : {ISEAR,SemEval}
+getPrep.Data <- function(path = "", type = "ISEAR"){
+  
+  if (path == "") {
+    path <- paste(getwd(),"isear.csv", sep = "/")
+  }
+  data.raw <- getData.ISEAR(path)
+  data.prep <- preproccess.data(data.raw)
+  
+  return(data.prep)
+}
+
+
+# ==========================================================================================
+# ================================ DATA EXTRACTION =========================================
+# ==========================================================================================
+
+
+# ====================================== ISEAR =============================================
+
+# LOAD ISEAR DATA
 getData.ISEAR <- function(path){
   
   # READ & GET IMPORTANT ATTRIBUTES
@@ -25,52 +54,73 @@ getData.ISEAR <- function(path){
   return(data)
 }
 
+# ==================================== SEMEVAL =============================================
 
-# GET ALL DATA WITHOUT NOISE
-#   EMOT label -> emotion tag
-#   SIT label -> Text
-getPreproc.Data.ISEAR <- function(path = ""){
+# LOAD SEMEVAL:14 DATA selecting the most intense emotion
+# type <- should be one of : {trial,test}
+getData.SemEval <- function(path, type = "trial"){
+  # Convert the Corpus xml file to a data frame.
+  affective.type <- paste("affectivetext",type,sep = "_")
+  affective.post <- paste(affective.type,"xml",sep = ".")
+  affective.emot <- paste(affective.type,"emotions.gold",sep = ".")
+  affective.val <- paste(affective.type,"valence.gold",sep = ".")
   
-  if (path == "") {
-    path <- paste(getwd(),"isear.csv", sep = "/")
-  }
-  data.raw <- getData.ISEAR(path)
-  data.prep <- preproccess.ISEAR(data.raw)
+  xmldataframe <- xmlToDataFrame(paste(path,affective.post,sep = "/"), stringsAsFactors = FALSE)
+  emots <- read.csv(paste(path,affective.emot,sep = "/"), stringsAsFactors = FALSE, header = FALSE, sep = " ", col.names = c("id","anger","disgust","fear","joy","sadness","surprise"))
+  valence <- read.csv(paste(path,affective.val,sep = "/"), stringsAsFactors = FALSE, header = FALSE, sep = " ", col.names = c("id","valence"))
   
-  return(data.prep)
+  emots <- emots[-1]
+  emots <- emots[,c(4,3,1,5,2,6)]
+  emots.max <- apply(emots, 1, which.max)
+  emots.max <- factor(x = emots.max)
+  levels(emots.max) <- list("joy" = "1", "fear" = "2", "anger" = "3", "sadness" = "4", "disgust" = "5", "surprise" = "6")
+  
+  semEval <- data.frame(SIT = xmldataframe$text, EMOT = emots.max, VAL = valence$valence , stringsAsFactors = FALSE)
+  return(semEval)
 }
 
+
+
+
+
+
+
+
+
+# ==========================================================================================
+# =============================== DATA PRE-PROCESSING ======================================
+# ==========================================================================================
 
 # DATA PRE_PROCESS
-preproccess.ISEAR <- function(isear.data){
+preproccess.data <- function(data){
   
   # DELETE ROWS WITH 1 LENGTH SENTENCES
-  pos <- which(sapply(tokenize_words(isear.data$SIT), length) == 1)
-  isear.data <- isear.data[-pos,]
+  pos <- which(sapply(tokenize_words(data$SIT), length) == 1)
+  data <- data[-pos,]
   
   # DELETE ALL NON-ALPHANUMERIC CHARACTERS & additional whitespace
-  #isear.data$SIT <- sapply(isear.data$SIT, function(x) gsub("[^a-zA-Z0-9']", " ", x)) # non-alphanumeric characters
-  #isear.data$SIT <- sapply(isear.data$SIT, function(x) gsub("\\s+", " ", x)) # additional whitespace
-  #isear.data$SIT <- sapply(isear.data$SIT, function(x) gsub(" $", "", x)) # end Whitespace
+  #data$SIT <- sapply(data$SIT, function(x) gsub("[^a-zA-Z0-9']", " ", x)) # non-alphanumeric characters
+  #data$SIT <- sapply(data$SIT, function(x) gsub("\\s+", " ", x)) # additional whitespace
+  #data$SIT <- sapply(data$SIT, function(x) gsub(" $", "", x)) # end Whitespace
   
   # LOWER CASE
-  # isear.data$SIT <- sapply(isear.data$SIT, tolower)
+  # data$SIT <- sapply(data$SIT, tolower)
   
   # TM - STEMMING
-  isear.docs <- Corpus(VectorSource(isear.data$SIT))
-  isear.docs <- tm_map(isear.docs, content_transformer(removeNumbers)) # Remove numbers
-  isear.docs <- tm_map(isear.docs, content_transformer(tolower)) # Transform words to lower
-  isear.docs <- tm_map(isear.docs, content_transformer(removeWords), stopwords("english")) # Remove english common stopwords e.g "the", "is", "of", etc
-  isear.docs <- tm_map(isear.docs, content_transformer(removePunctuation)) # Remove punctuations
-  isear.docs <- tm_map(isear.docs, stripWhitespace) # Eliminate extra white spaces
+  docs <- Corpus(VectorSource(data$SIT))
+  docs <- tm_map(docs, content_transformer(removeNumbers)) # Remove numbers
+  docs <- tm_map(docs, content_transformer(tolower)) # Transform words to lower
+  docs <- tm_map(docs, content_transformer(removeWords), stopwords("english")) # Remove english common stopwords e.g "the", "is", "of", etc
+  docs <- tm_map(docs, content_transformer(removePunctuation)) # Remove punctuations
+  docs <- tm_map(docs, stripWhitespace) # Eliminate extra white spaces
   
-  isear.docs <- tm_map(isear.docs, stemDocument) # Text stemming (reduces words to their root form)
-  #isear.docs <- tm_map(isear.docs, removeWords, c("clintonemailcom", "stategov", "hrod")) # Remove additional stopwords
+  docs <- tm_map(docs, stemDocument) # Text stemming (reduces words to their root form)
+  #docs <- tm_map(docs, removeWords, c("clintonemailcom", "stategov", "hrod")) # Remove additional stopwords
   
-  # GET STEMMING SENTENCES BACK TO ISEAR.DATA
-  isear.data$SIT <- sapply(isear.docs, identity)
+  # GET STEMMING SENTENCES BACK TO DATA
+  data$SIT <- sapply(docs, identity)
   
-  return(isear.data)
+  return(data)
 }
 
 
@@ -80,25 +130,32 @@ preproccess.ISEAR <- function(isear.data){
 
 
 
-# ========================= DATA FOR TRAINING ML MODELS ====================================
+
+
+
+# ==========================================================================================
+# =================== DATA REPRESENTATION FOR TRAINING ML MODELS ===========================
+# ==========================================================================================
+
+# ================================= BAG OF WORDS ===========================================
 
 # CREATE THE BAG OF WORDS
-bag.of.words <- function(isear.data, sparse = 0.999, train = TRUE){
-  isear.docs <- Corpus(VectorSource(isear.data))
+bag.of.words <- function(data, sparse = 0.999, train = TRUE){
+  docs <- Corpus(VectorSource(data))
   words.dict <- list()
   if ( train == TRUE ){
     #Remove Sparse Terms
-    isear.dtm <- DocumentTermMatrix(isear.docs)
-    isear.dtm <- removeSparseTerms(isear.dtm, sparse)
-    words.dict <- findFreqTerms(isear.dtm, 1)
+    dtm <- DocumentTermMatrix(docs)
+    dtm <- removeSparseTerms(dtm, sparse)
+    words.dict <- findFreqTerms(dtm, 1)
     d <- lapply(words.dict, write, file="dict.txt", append=F)
     d <- NULL
   } else {
     words.dict <- scan("dict.txt", what = character())
-    isear.dtm <- DocumentTermMatrix(isear.docs, list( dictionary = words.dict ))
+    dtm <- DocumentTermMatrix(docs, list( dictionary = words.dict ))
   }
   
-  mat <- as.matrix(isear.dtm)
+  mat <- as.matrix(dtm)
 
   return(mat)
 }
@@ -130,7 +187,13 @@ get.bagOfWords.allPartData <- function(path = ""){
 }
 
 
-# PARTITIONED DATA TO TRAIN
+
+
+# ==========================================================================================
+# ==================================== UTILITIES ===========================================
+# ==========================================================================================
+
+# Partition data into the num of values and their size
 partition.data <- function(values, data){
   size <- dim(data)[1]
   data <- data[ sample(nrow(data), nrow(data)), ]
@@ -142,10 +205,3 @@ partition.data <- function(values, data){
   }
   return(data_part)
 }
-
-
-
-
-
-
-
