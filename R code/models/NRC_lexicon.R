@@ -6,7 +6,7 @@ library(syuzhet)
 library(ggplot2)
 library(mldr)
 
-source('~/ClassificationEmotionModels_ISEAR/R code/data_exploration.R')
+#source('~/ClassificationEmotionModels_ISEAR/R code/data_exploration.R')
 
 # NRC EMOTION ANALYSIS
 
@@ -24,11 +24,12 @@ nrc_analysis <- function(data){
   
   # CONFUSION MATRIX
   data$EMOT <- factor(data$EMOT, levels = c("joy","fear","anger","sadness","disgust")) # RELATED LABELS WITH NRC
-  cm <- confusionMatrix(predict_emot$EMOT,data$EMOT)
+  cm <- confusionMatrix(predict_emot$EMOT,data$EMOT, mode = "everything")
   
   # PLOTS
-  visualize_data(predict_emot$EMOT)
-  nrc_plots(nrc_data,cm)
+  #visualize_data(predict_emot$EMOT)
+  #nrc_plots(nrc_data,cm)
+  return(cm)
 }
 
 nrc_plots <- function(nrc_data, conf.matrix){
