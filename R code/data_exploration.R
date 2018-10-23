@@ -5,6 +5,7 @@ library(plyr)
 library(ggplot2)
 library(wordcloud)
 library(gridExtra)
+library(xtable)
 
 # =============================== EXPLORATORY ANALYSIS ========================================
 emot.colors <- function(){
@@ -16,6 +17,9 @@ emot.colors <- function(){
 #   emotions: factor with emotion label for every sentence
 explore.data <- function(sentences,emotions){
   
+  # EMOTION FRECUENCIES
+  visualize_data(emotions)
+  
   # ANALYSIS OF WORDS ON SENTENCES
   write("WORDS ON SENTENCES",stdout())
   words <- tokenize_words(sentences)
@@ -26,9 +30,6 @@ explore.data <- function(sentences,emotions){
   phrases <- tokenize_sentences(sentences)
   visualize.nwords(phrases,emotions,"phrases")
   
-  # EMOTION FRECUENCIES
-  visualize_data(emotions)
-  
   # WORDCLOUD
   generate.wordcloud(sentences,emotions)
 }
@@ -36,29 +37,58 @@ explore.data <- function(sentences,emotions){
 
 # HISTOGRAM OF EMOTIONS FRECUENCIES 
 #   Receives a vector labels... [joy, joy, fear, joy, anger, ...]
-visualize_data <- function(test){
-  test_frame <- subset(as.data.frame(table(test)), Freq != 0)
-  pal <- c("red", "blue", "green")
-  p <- plot_ly(test_frame, x = test_frame$test, y = test_frame$Freq, type = 'bar', color = ~test_frame$test) %>%
-    layout(title = "Distribución de Emociones", 
-           xaxis = list(title = "Frecuencia de Apariciones"), 
-           yaxis = list(title = "Emociones"))
-  print(p)
+visualize_data <- function(emots){
+  ## Saving Parameters
+
+  freq <- round(as.vector(summary(emots)) / sum(as.vector(summary(emots))), 3)
+  cum_freq <- cumsum(freq)
+  
+  # New margins
+  def_par <- par()
+  par(mar=c(5,5,4,5)) 
+  
+  # plot bars, pc will hold x values for bars
+  pc = barplot(as.vector(summary(emots)),
+               width = 1, space = 0.2, border = NA, axes = F,
+               ylim = c(0, 1.05 * max(as.vector(summary(emots)), na.rm = T)), 
+               ylab = "Counts" , cex.names = 0.7, 
+               names.arg = levels(emots),
+               main = "Distribucción de Emociones",
+               col = emot.colors())
+  
+  # anotate left axis
+  axis(side = 2, at = c(0, as.vector(summary(emots))), las = 1, col.axis = "grey62", col = "grey62", tick = T, cex.axis = 0.8)
+  
+  # frame plot
+  box( col = "grey62")
+  
+  # Cumulative Frequency Lines 
+  px <- cum_freq * max(as.vector(summary(emots)), na.rm = T)
+  lines(pc, px, type = "b", cex = 0.7, pch = 19, col="cyan4")
+  
+  # Annotate Right Axis
+  axis(side = 4, at = c(0, px), labels = paste(c(0, round(cum_freq * 100)) ,"%",sep=""), 
+       las = 1, col.axis = "grey62", col = "cyan4", cex.axis = 0.8, col.axis = "cyan4")
+  
+  # restoring default paramenter
+  par(def_par) 
 }
 
 
 # SCATTER OF WORDS OR PHRASES IN PHRASES
 visualize.nwords <- function(words,emots,part.of.whole = "words"){
   data.words <- data.frame(n.words = sapply(words, length), emot = emots)
-  
+
   # Plot 1: Density plot with transparency (using the alpha argument)
   dens.words <- ggplot(data=data.words,aes(x=n.words, group=emot, fill=emot)) + 
     geom_density(adjust=1.5 , alpha=0.5) +
-    scale_fill_manual(values=emot.colors())
+    scale_fill_manual(values=emot.colors()) +
+    xlab(part.of.whole)
   total.dens.words <- ggplot(data=data.words,aes(x=n.words, group=emot, fill=emot)) + 
     geom_density(adjust=1.5 , alpha=0.5) +
     scale_fill_manual(values=emot.colors()) +
-    xlim(0,50) +
+    xlim(0,summary(data.words$n.words)[[5]]) +
+    xlab(part.of.whole) +
     theme(legend.position="none")
   
   print(grid.arrange(dens.words, total.dens.words, ncol=2))
@@ -97,28 +127,34 @@ visualize.nwords <- function(words,emots,part.of.whole = "words"){
 
 # WORDCLOUD : MOST FREC WORDS
 generate.wordcloud <- function(sentences, emots, data.title = "Most Used Words"){
+  data.sent <- data.frame(sentences = sentences, emot = emots)
   
   # FRECUENCY MATRIX OF WORDS
   data.docs <- Corpus(VectorSource(sentences))
   dtm <- TermDocumentMatrix(data.docs)
   data.freq <- as.matrix(dtm)
-  #colnames(data.freq) <- emots
-  data.freq <- sort(rowSums(data.freq),decreasing=TRUE)
-  data.freq <- data.frame(word = names(data.freq),freq=data.freq)
+  colnames(data.freq) <- emots
+  
+  combine.byEmot <- function(e){apply(data.freq[,which(emots == e)], 1, sum)}
+  
+  combine.data.freq <- sapply(levels(emots), combine.byEmot) %>% as.matrix()
+  
+  #data.freq <- sort(rowSums(data.freq),decreasing=TRUE)
+  #data.freq <- data.frame(word = names(data.freq),freq=data.freq)
   
   # GENERATE WORDCLOUD
   
-  #png("#102_1_comparison_cloud_top_2000_words.png", width = 480, height = 480)
-  #comparison.cloud(data.freq,max.words=2000,random.order=FALSE)
-  #dev.off()
-  
-  par(bg="grey30")
-  png(file="WordCloud.png",width=1000,height=700, bg="grey30")
-  write("Generating wordCloud .....", stdout())
-  wordcloud(data.freq$word, data.freq$freq, col=terrain.colors(length(data.freq$word), alpha=0.9), random.order=FALSE, rot.per=0.3 )
-  write("Done, Saved on Working Directory", stdout())
-  title(main = data.title, font.main = 1, col.main = "cornsilk3", cex.main = 1.5)
+  png("comparison_cloud_top_500_words.png", width = 480, height = 480)
+  comparison.cloud(combine.data.freq,max.words=500,random.order=FALSE,title.size = 1.5, colors = emot.colors())
   dev.off()
+  
+  #par(bg="grey30")
+  #png(file="WordCloud.png",width=1000,height=700, bg="grey30")
+  #write("Generating wordCloud .....", stdout())
+  #wordcloud(data.freq$word, data.freq$freq, col=terrain.colors(length(data.freq$word), alpha=0.9), random.order=FALSE, rot.per=0.3 )
+  #write("Done, Saved on Working Directory", stdout())
+  #title(main = data.title, font.main = 1, col.main = "cornsilk3", cex.main = 1.5)
+  #dev.off()
 }
 
 

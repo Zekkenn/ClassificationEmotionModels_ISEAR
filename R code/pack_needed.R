@@ -23,6 +23,17 @@ install.packages("plotly")
 install.packages("tokenizers")
 install.packages("plotly")
 install.packages("tidyverse")
+install.packages("multiROC")
+
+install.packages("dummies")
+
+install.packages("tidytext")
+install.packages("maxent")
+
+install.packages("expm")
+install.packages("markovchain")
+install.packages("diagram")
+install.packages("pracma")
 
 # ================================================================== #
 # == Uncomment when you need == #

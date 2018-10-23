@@ -15,7 +15,8 @@ train.nn <- function(data){
   
   
   
-  nn <- neuralnet(f, data = train, hidden = c(50, 10), act.fct = "logistic", linear.output = FALSE, lifesign = "minimal")
+  nn <- neuralnet(f, data = train, hidden = c(500), act.fct = "logistic", linear.output = FALSE, lifesign = "minimal")
+  
 }
 
 pre_proc <- function(data){
@@ -26,9 +27,8 @@ pre_proc <- function(data){
 }
 
 # ====== TEST ========
-# > test <- pre_proc(data_new[[2]])
-# size <- dim(test)[2]-1
-# > test <- data_new[[2]]
+# > test <- data[[2]]
+# > size <- dim(test)[2]-1
 # > test <- test[,1:size]
 # > pred_with <- compute( model_nn_without, test )
 # > pred_with_nn_factor <- max.col(pred_with$net.result)

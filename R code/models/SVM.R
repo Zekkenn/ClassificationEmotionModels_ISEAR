@@ -4,7 +4,6 @@ library(psych)
 library(kernlab)
 # library(R.matlab)
 library(gmodels)
-library(ROCR)
 library(caret)
 library(e1071)
 # library(RTextTools)
@@ -23,8 +22,9 @@ library(e1071)
 # registerDoParallel(workers)
 
 train.svm <- function(data.train, type = "svmLinear"){
-  ctrl <- trainControl(method = "cv", number = 6)
+  ctrl <- trainControl(method = "cv", classProbs = TRUE)
   grid <- expand.grid(C = c(0.05, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5))
+  levels(data.train$labels_model) <- c("X1", "X2", "X3", "X4", "X5", "X6", "X7")
   svm.model <- train( labels_model ~ ., data = data.train, method = type, trControl = ctrl, tuneGrid = grid )
   return(svm.model)
 }
