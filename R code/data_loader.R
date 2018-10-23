@@ -147,9 +147,9 @@ bag.of.words <- function(data, sparse = 0.999, train = TRUE){
     #Remove Sparse Terms
     dtm <- DocumentTermMatrix(docs)
     dtm <- removeSparseTerms(dtm, sparse)
-    words.dict <- findFreqTerms(dtm, 1)
-    d <- lapply(words.dict, write, file="dict.txt", append=F)
-    d <- NULL
+    # words.dict <- findFreqTerms(dtm, 1)
+    # d <- lapply(words.dict, write, file="dict.txt", append=F)
+    # d <- NULL
   } else {
     words.dict <- scan("dict.txt", what = character())
     dtm <- DocumentTermMatrix(docs, list( dictionary = words.dict ))
