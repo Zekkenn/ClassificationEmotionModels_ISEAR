@@ -10,9 +10,7 @@ library(dplyr)
 library("XML")
 library("methods")
 library(plyr)
-# GET ALL DATA WITHOUT NOISE
-#   EMOT label -> emotion tag
-#   SIT label -> Text
+library("gpuR")
 
 # ==========================================================================================
 # ================================ MAIN PREPARED DATA ======================================
@@ -31,6 +29,52 @@ getPrep.Data <- function(path = "", type = "ISEAR"){
   return(data.prep)
 }
 
+# OBTAIN ISEAR(TRAIN) & SEMEVAL(TEST) WITH RELATED EMOTS
+# RELATED EMOTS : {JOY,FEAR,ANGER,SADNESS,DISGUST}
+getRaw.complete <- function(isear.path,semeval.path){
+  # Obtain Raws
+  raw.isear <- getData.ISEAR(isear.path)
+  raw.semEval <- getData.SemEval(path = semeval.path)
+  
+  # Get related emots
+  emots.betw <- related.emots(raw.isear,raw.semEval)
+  
+  isear.train <- raw.isear[raw.isear$EMOT %in% emots.betw,]
+  isear.train$EMOT <- factor(isear.train$EMOT, levels = emots.betw)
+  
+  semeval.test <- raw.semEval[raw.semEval$EMOT %in% emots.betw,]
+  semeval.test$EMOT <- factor(semeval.test$EMOT, levels = emots.betw)
+  
+  return(list(isear.train,semeval.test))
+}
+
+getPre.complete <- function(isear.path,semeval.path){
+  ss <- getRaw.complete(isear.path,semeval.path)
+  pre.isear <- preproccess.data(ss[[1]])
+  pre.semeval <- preproccess.data(ss[[2]])
+  return(list(pre.isear,pre.semeval))
+}
+
+# type.data : {pre,raw}
+# rep : {bagOfWords}
+getRepr.complete <- function(isear.path,semeval.path,type.data = "pre",rep = "bagOfWords"){
+  if (type.data == "pre") {
+    ss <- getPre.complete(isear.path,semeval.path)
+  }else if (type.data == "raw"){
+    ss <- getRaw.complete(isear.path,semeval.path)
+  }else {
+    return(NULL)
+  }
+  
+  if (rep == "bagOfWords") {
+    bag.isear <- bag.of.words(ss[[1]])
+    bag.semeval <- bag.of.words(ss[[2]])
+  } else {
+    return(NULL)
+  }
+  
+  return(list(bag.isear,bag.semeval))
+}
 
 # ==========================================================================================
 # ================================ DATA EXTRACTION =========================================
@@ -58,7 +102,7 @@ getData.ISEAR <- function(path){
 
 # LOAD SEMEVAL:14 DATA selecting the most intense emotion
 # type <- should be one of : {trial,test}
-getData.SemEval <- function(path, type = "trial"){
+getData.SemEval <- function(path, type = "test"){
   # Convert the Corpus xml file to a data frame.
   affective.type <- paste("affectivetext",type,sep = "_")
   affective.post <- paste(affective.type,"xml",sep = ".")
@@ -93,10 +137,10 @@ getData.SemEval <- function(path, type = "trial"){
 
 # DATA PRE_PROCESS
 preproccess.data <- function(data){
-  
+
   # DELETE ROWS WITH 1 LENGTH SENTENCES
   pos <- which(sapply(tokenize_words(data$SIT), length) == 1)
-  data <- data[-pos,]
+  if (length(pos) != 0) {data <- data[-pos,]}
   
   # DELETE ALL NON-ALPHANUMERIC CHARACTERS & additional whitespace
   #data$SIT <- sapply(data$SIT, function(x) gsub("[^a-zA-Z0-9']", " ", x)) # non-alphanumeric characters
@@ -141,23 +185,35 @@ preproccess.data <- function(data){
 
 # CREATE THE BAG OF WORDS
 bag.of.words <- function(data, sparse = 0.999, train = TRUE){
-  docs <- Corpus(VectorSource(data))
+  docs <- Corpus(VectorSource(data$SIT))
   words.dict <- list()
   if ( train == TRUE ){
     #Remove Sparse Terms
     dtm <- DocumentTermMatrix(docs)
     dtm <- removeSparseTerms(dtm, sparse)
-    words.dict <- findFreqTerms(dtm, 1)
-    d <- lapply(words.dict, write, file="dict.txt", append=F)
-    d <- NULL
+    # words.dict <- findFreqTerms(dtm, 1)
+    # d <- lapply(words.dict, write, file="dict.txt", append=F)
+    # d <- NULL
   } else {
     words.dict <- scan("dict.txt", what = character())
     dtm <- DocumentTermMatrix(docs, list( dictionary = words.dict ))
   }
   
   mat <- as.matrix(dtm)
+  
+  # Delete all rows that have all columns in zero and normalize
+  row_sub <- apply(mat, 1, function(row) all(row ==0 ))
+  mat <- mat[!row_sub,]
+  mat <- scale(mat)
+  
+  bagOfWords <- cbind( mat, data$EMOT[!row_sub] )
+  
+  colnames( bagOfWords )[ ncol(bagOfWords) ] <- "labels_model"
+  bagOfWords <- as.data.frame(bagOfWords)
+  bagOfWords$labels_model <- factor(bagOfWords$labels_model)
+  levels(bagOfWords$labels_model) <- list("joy" = "1", "fear" = "2", "anger" = "3", "sadness" = "4", "disgust" = "5")
 
-  return(mat)
+  return(bagOfWords)
 }
 
 # GET TRAIN, TEST AND VALIDATION DATA TURNED INTO THE BAG OF WORDS
@@ -204,4 +260,9 @@ partition.data <- function(values, data){
     data_part[[i]] <- data[ values[i]:values[i+1], ]
   }
   return(data_part)
+}
+
+# OBTAIN RELATED EMOTS BETWEEN TWO DATASETS
+related.emots <- function(data1,data2){
+  return(intersect(levels(data1$EMOT),levels(data2$EMOT)))
 }
