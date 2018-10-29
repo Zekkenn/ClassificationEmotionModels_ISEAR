@@ -10,7 +10,7 @@ library(dplyr)
 library("XML")
 library("methods")
 library(plyr)
-library("gpuR")
+#library("gpuR")
 
 # ==========================================================================================
 # ================================ MAIN PREPARED DATA ======================================
@@ -191,9 +191,7 @@ bag.of.words <- function(data, sparse = 0.999, train = TRUE){
     #Remove Sparse Terms
     dtm <- DocumentTermMatrix(docs)
     dtm <- removeSparseTerms(dtm, sparse)
-    # words.dict <- findFreqTerms(dtm, 1)
-    # d <- lapply(words.dict, write, file="dict.txt", append=F)
-    # d <- NULL
+    # createDict(dtm)
   } else {
     words.dict <- scan("dict.txt", what = character())
     dtm <- DocumentTermMatrix(docs, list( dictionary = words.dict ))
@@ -214,6 +212,13 @@ bag.of.words <- function(data, sparse = 0.999, train = TRUE){
   levels(bagOfWords$labels_model) <- list("joy" = "1", "fear" = "2", "anger" = "3", "sadness" = "4", "disgust" = "5")
 
   return(bagOfWords)
+}
+
+# Create a Dictionary 
+createDict <- function(dtm){
+  words.dict <- findFreqTerms(dtm, 1)
+  d <- lapply(words.dict, write, file="dict.txt", append=T)
+  d <- NULL
 }
 
 # GET TRAIN, TEST AND VALIDATION DATA TURNED INTO THE BAG OF WORDS
