@@ -35,6 +35,8 @@ install.packages("markovchain")
 install.packages("diagram")
 install.packages("pracma")
 
+install.packages("sets")
+
 # ================================================================== #
 # == Uncomment when you need == #
 

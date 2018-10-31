@@ -6,11 +6,12 @@ library(wordcloud)
 library(caret)
 #library(readr)
 library(tokenizers)
+library(plyr)
 library(dplyr)
 library("XML")
 library("methods")
-library(plyr)
 #library("gpuR")
+library(sets)
 
 # ==========================================================================================
 # ================================ MAIN PREPARED DATA ======================================
@@ -191,7 +192,7 @@ bag.of.words <- function(data, sparse = 0.999, train = TRUE){
     #Remove Sparse Terms
     dtm <- DocumentTermMatrix(docs)
     dtm <- removeSparseTerms(dtm, sparse)
-    # createDict(dtm)
+    #createDict(dtm)
   } else {
     words.dict <- scan("dict.txt", what = character())
     dtm <- DocumentTermMatrix(docs, list( dictionary = words.dict ))
@@ -216,7 +217,12 @@ bag.of.words <- function(data, sparse = 0.999, train = TRUE){
 
 # Create a Dictionary 
 createDict <- function(dtm){
-  words.dict <- findFreqTerms(dtm, 1)
+  words.dict <- list()
+  tryCatch({
+    words.dict <- scan("dicta.txt", what = character())
+  }, warning = function(w) {}, error = function(e) {})
+  words.data <- findFreqTerms(dtm, 1)
+  words.dict <- unique(c( words.data, words.dict ))
   d <- lapply(words.dict, write, file="dict.txt", append=T)
   d <- NULL
 }
@@ -225,11 +231,10 @@ createDict <- function(dtm){
 get.bagOfWords.allPartData <- function(path = ""){
   
   # GET THE BAG OF WORDS AND ITS LABELS
-  data <- getPreproc.Data.ISEAR(path)
+  data <- getPrep.Data(path)
   levels( data$EMOT ) <- list("1" = "joy", "2" = "fear", "3" = "anger", "4" = "sadness", "5" = "disgust", "6" = "shame", "7" = "guilt")
   data$EMOT <- as.numeric(data$EMOT)
-  
-  mat <- bag.of.words(data$SIT, sparse = 0.99)
+  mat <- bag.of.words(data, sparse = 0.999)
   # Delete all rows that have all columns in zero and normalize
   row_sub <- apply(mat, 1, function(row) all(row ==0 ))
   mat <- mat[!row_sub,]
