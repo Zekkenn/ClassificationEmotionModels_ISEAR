@@ -11,7 +11,7 @@ library(dplyr)
 library("XML")
 library("methods")
 #library("gpuR")
-library(sets)
+#library(sets)
 
 # ==========================================================================================
 # ================================ MAIN PREPARED DATA ======================================
@@ -185,14 +185,14 @@ preproccess.data <- function(data){
 # ================================= BAG OF WORDS ===========================================
 
 # CREATE THE BAG OF WORDS
-bag.of.words <- function(data, sparse = 0.999, train = TRUE){
+bag.of.words <- function(data, sparse = 0.999, init = FALSE){
   docs <- Corpus(VectorSource(data$SIT))
   words.dict <- list()
-  if ( train == TRUE ){
+  if ( init == TRUE ){
     #Remove Sparse Terms
     dtm <- DocumentTermMatrix(docs)
     dtm <- removeSparseTerms(dtm, sparse)
-    #createDict(dtm)
+    createDict(dtm)
   } else {
     words.dict <- scan("dict.txt", what = character())
     dtm <- DocumentTermMatrix(docs, list( dictionary = words.dict ))
@@ -209,6 +209,7 @@ bag.of.words <- function(data, sparse = 0.999, train = TRUE){
   
   colnames( bagOfWords )[ ncol(bagOfWords) ] <- "labels_model"
   bagOfWords <- as.data.frame(bagOfWords)
+  bagOfWords <- mutate_all(bagOfWords,funs(replace(., is.na(.), 0)))
   bagOfWords$labels_model <- factor(bagOfWords$labels_model)
   levels(bagOfWords$labels_model) <- list("joy" = "1", "fear" = "2", "anger" = "3", "sadness" = "4", "disgust" = "5")
 
@@ -219,10 +220,11 @@ bag.of.words <- function(data, sparse = 0.999, train = TRUE){
 createDict <- function(dtm){
   words.dict <- list()
   tryCatch({
-    words.dict <- scan("dicta.txt", what = character())
+    words.dict <- scan("dict.txt", what = character())
   }, warning = function(w) {}, error = function(e) {})
   words.data <- findFreqTerms(dtm, 1)
   words.dict <- unique(c( words.data, words.dict ))
+  write(file = "dict.txt", append = F, x = "")
   d <- lapply(words.dict, write, file="dict.txt", append=T)
   d <- NULL
 }

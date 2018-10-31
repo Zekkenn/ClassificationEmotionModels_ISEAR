@@ -23,7 +23,7 @@ library(e1071)
 
 train.svm <- function(data.train, type = "svmLinear", lvls = c("X1", "X2", "X3", "X4", "X5")){
   ctrl <- trainControl(method = "cv", classProbs = TRUE)
-  grid <- expand.grid(C = c(0.05, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5))
+  grid <- expand.grid(C = c(0.05, 0.1, 0.25, 0.5, 0.75))
   levels(data.train$labels_model) <- lvls
   svm.model <- train( labels_model ~ ., data = data.train, method = type, trControl = ctrl, tuneGrid = grid )
   return(svm.model)
