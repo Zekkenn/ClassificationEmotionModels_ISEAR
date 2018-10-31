@@ -4,16 +4,26 @@ library(neuralnet)
 library(nnet)
 library(ggplot2)
 
+getEcuation_7 <- function(){
+  f <- as.formula(paste("l1 + l2 + l3 + l4 + l5 + l6 + l7 ~ ", 
+                        paste(n[!n %in% c("`l1`","`l2`","`l3`", "`l4`","`l5`","`l6`", "`l7`")], 
+                              collapse = " + ")))
+  return(f)
+}
+
+getEcuation_5 <- function(){
+  f <- as.formula(paste("l1 + l2 + l3 + l4 + l5 ~ ", 
+                        paste(n[!n %in% c("`l1`","`l2`","`l3`", "`l4`","`l5`")], 
+                              collapse = " + ")))
+  return(f)
+}
+
 train.nn <- function(data){
   
   train <- pre_proc(data)
   
   n <- sprintf("`%s`", names(train))
-  f <- as.formula(paste("l1 + l2 + l3 + l4 + l5 + l6 + l7 ~ ", 
-                        paste(n[!n %in% c("`l1`","`l2`","`l3`", "`l4`","`l5`","`l6`", "`l7`")], 
-                              collapse = " + ")))
-  
-  
+  f <- getEcuation_5()
   
   nn <- neuralnet(f, data = train, hidden = c(500), act.fct = "logistic", linear.output = FALSE, lifesign = "minimal")
   
@@ -22,7 +32,7 @@ train.nn <- function(data){
 pre_proc <- function(data){
   size <- (dim(data)[2]-1)
   data <- cbind(data[, 1:size], class.ind(as.factor(data$labels_model)))
-  names(data) <- c(names(data)[ 1:size ],"l1","l2","l3", "l4","l5","l6", "l7")
+  names(data) <- c(names(data)[ 1:size ],"l1","l2","l3", "l4","l5")
   return(data)
 }
 

@@ -1,5 +1,5 @@
 
-setwd("C:/Users/ASUS/Documents/Sebastian/ClassificationEmotionModels_ISEAR")
+#setwd("C:/Users/ASUS/Documents/Sebastian/ClassificationEmotionModels_ISEAR")
 
 source("R code/data_loader.R")
 source("R code/models/NN.R")
@@ -18,3 +18,9 @@ bagIsear <- bag.of.words(dataIsear)
 modelBayes <- train.naiveBayes(bagIsear)
 modelSVM <- train.svm(bagIsear)
 modelNN <- train.nn(bagIsear)
+
+#--------Save Models--------
+saveRDS(modelBayes, file = "R code/models.save/modelBayes.rds")
+saveRDS(modelSVM, file = "R code/models.save/modelSVM.rds")
+saveRDS(modelNN, file = "R code/models.save/modelNN.rds")
+
