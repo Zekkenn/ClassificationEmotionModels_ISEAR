@@ -10,8 +10,13 @@ library(xtable)
 # ==========================================================================================
 # ============================= EXPLORATORY ANALYSIS =======================================
 # ==========================================================================================
-emot.colors <- function(){
-  return(c("#93CEBA","#E89B7D","#ADB5CC","#F0A1CE","#B6D077","#FEE571","#E0CBAE"))
+emot.colors <- function(amount){
+  cols <- c("#93CEBA","#E89B7D","#ADB5CC","#F0A1CE","#B6D077","#FEE571","#E0CBAE","#442220","#31493C","#00CC66")
+  return(cols[1:amount])
+}
+
+emot.colors.semeval <- function(){
+  return(c("#93CEBA","#E89B7D","#ADB5CC","#F0A1CE","#B6D077","#E2792D"))
 }
 
 # GENERAL DATA EXPLORATION
@@ -19,27 +24,31 @@ emot.colors <- function(){
 #   emotions: factor with emotion label for every sentence
 explore.data <- function(sentences,emotions){
   
+  #COMMON PALETTE
+  emot.palette <- emot.colors(length(levels(emotions)))
+  if (length(levels(emotions))){emot.palette <- emot.colors.semeval()}
+  
   # EMOTION FRECUENCIES
-  visualize_data(emotions)
+  visualize_data(emotions,emot.palette)
   
   # ANALYSIS OF WORDS ON SENTENCES
   write("WORDS ON SENTENCES",stdout())
   words <- tokenize_words(sentences)
-  visualize.nwords(words,emotions,"words")
+  visualize.nwords(words,emotions,emot.palette,"words")
   
   # ANALYSIS OF PHRASES ON SENTENCES
   write("PHRASES ON SENTENCES",stdout())
   phrases <- tokenize_sentences(sentences)
-  visualize.nwords(phrases,emotions,"phrases")
+  visualize.nwords(phrases,emotions,emot.palette,"phrases")
   
   # WORDCLOUD
-  generate.wordcloud(sentences,emotions)
+  generate.wordcloud(sentences,emotions,emot.palette)
 }
 
 
 # HISTOGRAM OF EMOTIONS FRECUENCIES 
 #   Receives a vector labels... [joy, joy, fear, joy, anger, ...]
-visualize_data <- function(emots){
+visualize_data <- function(emots,emot.palette){
   ## Saving Parameters
 
   freq <- round(as.vector(summary(emots)) / sum(as.vector(summary(emots))), 3)
@@ -56,7 +65,7 @@ visualize_data <- function(emots){
                ylab = "Counts" , cex.names = 0.7, 
                names.arg = levels(emots),
                main = "Distribucción de Emociones",
-               col = emot.colors())
+               col = emot.palette)
   
   # anotate left axis
   axis(side = 2, at = c(0, as.vector(summary(emots))), las = 1, col.axis = "grey62", col = "grey62", tick = T, cex.axis = 0.8)
@@ -78,17 +87,17 @@ visualize_data <- function(emots){
 
 
 # SCATTER OF WORDS OR PHRASES IN PHRASES
-visualize.nwords <- function(words,emots,part.of.whole = "words"){
+visualize.nwords <- function(words,emots,emot.palette,part.of.whole = "words"){
   data.words <- data.frame(n.words = sapply(words, length), emot = emots)
 
   # Plot 1: Density plot with transparency (using the alpha argument)
   dens.words <- ggplot(data=data.words,aes(x=n.words, group=emot, fill=emot)) + 
     geom_density(adjust=1.5 , alpha=0.5) +
-    scale_fill_manual(values=emot.colors()) +
+    scale_fill_manual(values=emot.palette) +
     xlab(part.of.whole)
   total.dens.words <- ggplot(data=data.words,aes(x=n.words, group=emot, fill=emot)) + 
     geom_density(adjust=1.5 , alpha=0.5) +
-    scale_fill_manual(values=emot.colors()) +
+    scale_fill_manual(values=emot.palette) +
     xlim(0,summary(data.words$n.words)[[5]]) +
     xlab(part.of.whole) +
     theme(legend.position="none")
@@ -96,7 +105,7 @@ visualize.nwords <- function(words,emots,part.of.whole = "words"){
   print(grid.arrange(dens.words, total.dens.words, ncol=2))
 
   # Plot 2: General Frecuency plot
-  total.words <- plot_ly(x = rep(1:length(words)), y = data.words$n.words, name = "Word counts", type = "scatter", mode = "lines") %>%
+  total.words <- plot_ly(x = rep(1:length(words)), y = data.words$n.words, name = "Word counts", type = "scatter", mode = "lines", line = list(color = 'rgb(45,178,115)')) %>%
     add_trace(y = ~mean(sapply(words, length)), name = paste('Mean: ', mean(sapply(words, length))), line = list(color = 'rgb(205, 12, 24)', width = 4, dash = 'dash')) %>%
     add_trace(y = ~min(sapply(words, length)), name = paste('Min: ', min(sapply(words, length))), line = list(color = 'rgb(205, 12, 24)', width = 4, dash = 'dot')) %>%
     add_trace(y = ~max(sapply(words, length)), name = paste('Max: ', max(sapply(words, length))), line = list(color = 'rgb(205, 12, 24)', width = 4)) %>%
@@ -122,13 +131,13 @@ visualize.nwords <- function(words,emots,part.of.whole = "words"){
 
   sum.total <- data.frame(n.words = data.words$n.words, emot = sum.words)
   words.stacked <- rbind(data.words, sum.total)
-  nwords.byEmot <- plot_ly(y = words.stacked$n.words, color = words.stacked$emot, type = "box", colors = c(emot.colors(),"#6D6C74"))
+  nwords.byEmot <- plot_ly(y = words.stacked$n.words, color = words.stacked$emot, type = "box", colors = c(emot.palette,"#6D6C74"))
   print(nwords.byEmot)
 }
 
 
 # WORDCLOUD : MOST FREC WORDS
-generate.wordcloud <- function(sentences, emots, data.title = "Most Used Words"){
+generate.wordcloud <- function(sentences, emots, emot.palette, data.title = "Most Used Words"){
   data.sent <- data.frame(sentences = sentences, emot = emots)
   
   # FRECUENCY MATRIX OF WORDS
@@ -147,7 +156,7 @@ generate.wordcloud <- function(sentences, emots, data.title = "Most Used Words")
   # GENERATE WORDCLOUD
   
   png("comparison_cloud_top_500_words.png", width = 480, height = 480)
-  comparison.cloud(combine.data.freq,max.words=500,random.order=FALSE,title.size = 1.5, colors = emot.colors())
+  comparison.cloud(combine.data.freq,max.words=500,random.order=FALSE,title.size = 1.5, colors = emot.palette)
   dev.off()
   
   #par(bg="grey30")
