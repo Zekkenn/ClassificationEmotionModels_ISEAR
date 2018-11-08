@@ -20,10 +20,8 @@ evalSimple <- function(lbsSVM, lbsNN, lbsBayes, lbsLex){
 #Data is in the basic form, a data frame with SIT and EMOT labels
 simpleComposedModel <- function( modelSVM, modelNN, modelBayes, ModelLex, data){
   bagOfWords <- bag.of.words(data)
-  lbsSVM <- predict.svm(modelSVM, bagOfWords, 
-    list("joy" = "X1", "fear" = "X2", "anger" = "X3", "sadness" = "X4", "disgust" = "X5"))
-  lbsNN <- predict.nn(modelNN, bagOfWords,
-    list("joy" = "1", "fear" = "2", "anger" = "3", "sadness" = "4", "disgust" = "5"))
+  lbsSVM <- predict.svm(modelSVM, bagOfWords, getLevels())
+  lbsNN <- predict.nn(modelNN, bagOfWords, getLevels())
   lbsLex <- predict.lex(ModelLex, data)
   lbsBayes <- predict.bayes(modelBayes, bagOfWords)
   
@@ -34,4 +32,8 @@ simpleComposedModel <- function( modelSVM, modelNN, modelBayes, ModelLex, data){
 
 maxProbModel <- function( modelSVM, ModelLex, modelNN, modelBayes, data){
   
+}
+
+test <- function(){
+  a <<- 5
 }

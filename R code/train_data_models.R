@@ -11,7 +11,7 @@ dataSem <- getData.SemEval(path = "SemEval_14/AffectiveText.test")
 dataIsear <- getData.ISEAR(path = "py_isear_dataset/isear.csv")
 
 dataIsear <- dataIsear[ !(dataIsear$EMOT %in% c("guilt", "shame")), ]
-levels(dataIsear$EMOT) <- list("joy" = "1", "fear" = "2", "anger" = "3", "sadness" = "4", "disgust" = "5")
+levels(dataIsear$EMOT) <- getLevels()
 
 bagSem <- bag.of.words(dataSem)
 bagIsear <- bag.of.words(dataIsear)

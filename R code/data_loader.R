@@ -171,13 +171,6 @@ preproccess.data <- function(data){
 
 
 
-
-
-
-
-
-
-
 # ==========================================================================================
 # =================== DATA REPRESENTATION FOR TRAINING ML MODELS ===========================
 # ==========================================================================================
@@ -210,9 +203,10 @@ bag.of.words <- function(data, sparse = 0.999, init = FALSE){
   colnames( bagOfWords )[ ncol(bagOfWords) ] <- "labels_model"
   bagOfWords <- as.data.frame(bagOfWords)
   bagOfWords <- mutate_all(bagOfWords,funs(replace(., is.na(.), 0)))
+  
   bagOfWords$labels_model <- factor(bagOfWords$labels_model)
-  levels(bagOfWords$labels_model) <- list("joy" = "1", "fear" = "2", "anger" = "3", "sadness" = "4", "disgust" = "5")
-
+  levels(bagOfWords$labels_model) <- getLevels()
+  
   return(bagOfWords)
 }
 
@@ -234,7 +228,7 @@ get.bagOfWords.allPartData <- function(path = ""){
   
   # GET THE BAG OF WORDS AND ITS LABELS
   data <- getPrep.Data(path)
-  levels( data$EMOT ) <- list("1" = "joy", "2" = "fear", "3" = "anger", "4" = "sadness", "5" = "disgust", "6" = "shame", "7" = "guilt")
+  levels( data$EMOT ) <- getLevelsNum()
   data$EMOT <- as.numeric(data$EMOT)
   mat <- bag.of.words(data, sparse = 0.999)
   # Delete all rows that have all columns in zero and normalize
@@ -247,7 +241,7 @@ get.bagOfWords.allPartData <- function(path = ""){
   colnames( bagOfWords )[ ncol(bagOfWords) ] <- "labels_model"
   bagOfWords <- as.data.frame(bagOfWords)
   bagOfWords$labels_model <- factor(bagOfWords$labels_model)
-  levels(data$EMOT) <- list("joy" = "1", "fear" = "2", "anger" = "3", "sadness" = "4", "disgust" = "5", "shame" = "6", "guilt" = "7")
+  levels(data$EMOT) <- getLevels()
   # PARTITION THE DATA
   data <- partition.data( c(0.8, 1), bagOfWords )
   
@@ -278,3 +272,21 @@ partition.data <- function(values, data){
 related.emots <- function(data1,data2){
   return(intersect(levels(data1$EMOT),levels(data2$EMOT)))
 }
+
+#Get Emotions based on the dataset
+datasetLvls <- c()
+datasetLvlsNum <- c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")
+
+#Example of code setLevels(levels(dataIsear$EMOT))
+setLevels <- function(lvls){
+  datasetLvls <<- lvls
+}
+
+getLevels <- function(){
+  return(datasetLvls)
+}
+
+getLevelsNum <- function(){
+  return( datasetLvlsNum[1:length(datasetLvls)] )
+}
+
