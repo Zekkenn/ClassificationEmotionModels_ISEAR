@@ -28,3 +28,12 @@ train.svm <- function(data.train, type = "svmLinear", lvls = c("X1", "X2", "X3",
   svm.model <- train( labels_model ~ ., data = data.train, method = type, trControl = ctrl, tuneGrid = grid )
   return(svm.model)
 }
+
+# y is a list with the labels of the dataset, example:
+# y <- list("joy" = "X1", "fear" = "X2", "anger" = "X3", "sadness" = "X4", "disgust" = "X5")
+predict.svm <- function(modelSVM, data, y){
+  predSVM <- predict(modelSVM, data)
+  levels(predSVM) <- y
+  return(predSVM)
+  
+}

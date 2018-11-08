@@ -57,7 +57,10 @@ nrc_plots <- function(nrc_data, conf.matrix){
   conf.matrix
 }
 
-
+predict.lex <- function(modelLex, data){
+  pred <- "lol"
+  return(pred)
+}
 
 # ISEAR LABELS TRANSFORMATION
 

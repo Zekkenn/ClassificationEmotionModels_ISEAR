@@ -36,6 +36,21 @@ pre_proc <- function(data){
   return(data)
 }
 
+predict.nn <- function(modelNN. data, y){
+  predNN <- predict.nn.prob(modelNN, data)
+  predNN <- max.col(pred_with$net.result)
+  predNN <- factor( predNN )
+  levels(predNN) <- 
+  return(predNN)
+}
+
+predict.nn.prob <- function(modelNN, data){
+  size <- dim(data)[2]-1
+  test <- data[,1:size]
+  pred_with <- compute( modelNN, test )
+  return(pred_with)
+}
+
 # ====== TEST ========
 # > test <- data[[2]]
 # > size <- dim(test)[2]-1

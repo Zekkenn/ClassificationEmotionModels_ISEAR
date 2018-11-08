@@ -40,6 +40,11 @@ plot.roc <- function(true_label, pred){
   
 }
 
+predcit.bayes <- function(modelBayes, data){
+  predBayes <- predict(modelBayes, data)
+  return(predBayes)
+}
+
 # Test 
 # data <- get.bagOfWords.allPartData("py_isear_dataset/isear.csv")
 # model.naivebayes <- train.naiveBayes(data[[1]])
