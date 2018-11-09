@@ -1,0 +1,125 @@
+# ======================================== IMPORTS =========================================
+
+this.dir <- dirname(parent.frame(2)$ofile)
+setwd(this.dir)
+
+source("data_loader.R")
+source("data_exploration.R")
+source("models/NN.R")
+source("models/SVM.R")
+source("models/NaiveBayes.R")
+source("models/NRC_lexicon.R")
+
+# ==========================================================================================
+# ================================ EMOTIONAL CLASIFICATION MODEL ===========================
+# ==========================================================================================
+
+
+# ===================================== TRAINING STAGE =====================================
+
+
+# X - A Chr Vector with Sentences or Documents
+# Y - A Chr Vector with the corresponding emotions
+# LANGUAGE - A string specifying the type of speech or dialect
+# PREPROCESS - A logical: should be the data preProcess
+# REPRES - A string specifying the type of data representation for training
+# TUNEBAGG - A String specifying the decision heuristic
+ecm <- function(x, y, language = "English", preProcess = TRUE, repres = "Bag", tuneBagg = "Simple"){
+  # Init
+  setLevels(levels(y))
+  
+  # PREPROCESSING STAGE
+  if(preProcess){  x <- preproccess.data(data.frame(SIT = x))  }
+  
+  # CHARACTERISTICS REPRESENTATION STAGE
+  x.rep <- x
+  switch(repres,
+      Bag={ # Bag Of Words Case
+        x.rep <- bag.of.words(data.frame(SIT = x))
+      }
+  )
+  
+  # MODEL CONSTRUCTION & TRAINING STAGE
+  emot_classifier <- ecm.train(x,x.rep,y,tuneBagg)
+  
+  # SAVE MODEL
+  saveRDS(emot_classifier, file = "models.save/emot_classifier.rds")
+  
+  return(emot_classifier)
+}
+
+
+# X - A Chr Vector with Sentences or Documents
+# X.REP - A Matrix containing the character representation of X
+# Y - A Chr Vector with the corresponding emotions
+# TUNEBAGG - A String specifying the decision heuristic
+ecm.train <- function(x, x.rep, y, tuneBagg){
+
+  # MACHINE LEARNING MODELS
+  modelBayes <- train.naiveBayes(x.rep)
+  modelSVM <- train.svm(x.rep)
+  modelNN <- train.nn(x.rep)
+  
+  # KNOWLEDGE MODELS
+  modelNRC <- nrc_analysis(data.frame(SIT = x, EMOT = y))
+
+  modelBagg <- list(tuneBagg = tuneBagg,
+                    BAYES = modelBayes, SVM = modelSVM, NN = modelNN, NRC = modelNRC)
+  return(modelBagg)
+}
+
+
+
+
+# ================================== PREDICTION STAGE ======================================
+
+
+# ECM.MODEL - Bagging model with the respective decision heuristic & models
+# PRED.DATA - DATA OR SENTENCES TO BE PREDICTED
+ecm.prediction <- function(ecm.model, pred.data){
+  emotional.response <- NULL
+  switch (ecm.model$tuneBagg,
+          Simple = {
+            emotional.response <- baggPred.simple(ecm.model,pred.data)
+          },
+          Expert = {
+            emotional.response <- baggPred.expert(ecm.model,pred.data)
+          },
+          Probabilities = {
+            emotional.response <- baggPred.prob(ecm.model,pred.data)
+          }
+  )
+  
+  emotional.response <- factor(emotional.response, levels = getLevels())
+  return(emotional.response)
+}
+
+
+
+baggPred.simple <- function(ecm.model, pred.data){
+  
+}
+
+baggPred.expert <- function(ecm.model, pred.data){
+  
+}
+
+baggPred.prob <- function(ecm.model, pred.data){
+  
+}
+
+
+
+
+# ================================== EVALUATION STAGE ======================================
+
+
+#
+ecm.evaluation <- function(data.prediction, data.reference){
+  
+  # CONFUSION MATRIX
+  cm <- confusionMatrix( data.prediction, data.reference )
+  
+  plot(cm$table, main = "Confusion Matrix")
+  write(cm, stdout())
+}
