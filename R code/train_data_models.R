@@ -24,14 +24,14 @@ modelSVM <- train.svm(bagIsear)
 modelNN <- train.nn(bagIsear)
 
 #--------Save Models--------
-saveRDS(modelBayes, file = "R code/models.save/modelBayes.rds")
-saveRDS(modelSVM, file = "R code/models.save/modelSVM.rds")
-saveRDS(modelNN, file = "R code/models.save/modelNN.rds")
+saveRDS(modelBayes, file = "R code/models.save/modelBayesSem.rds")
+saveRDS(modelSVM, file = "R code/models.save/modelSVMSem.rds")
+saveRDS(modelNN, file = "R code/models.save/modelNNSem.rds")
 
 #--------Load Models--------
-modelSVM <- readRDS("R code/models.save/modelSVM.rds")
-modelBayes <- readRDS("R code/models.save/modelBayes.rds")
-modelNN <- readRDS("R code/models.save/modelNN.rds")
+modelSVM <- readRDS("R code/models.save/modelSVMSem.rds")
+modelBayes <- readRDS("R code/models.save/modelBayesSem.rds")
+modelNN <- readRDS("R code/models.save/modelNNSem.rds")
 
 #-------Composition---------
 predSVM <- predict(modelSVM, bagSem)

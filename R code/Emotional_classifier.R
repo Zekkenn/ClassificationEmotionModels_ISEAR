@@ -97,6 +97,15 @@ ecm.prediction <- function(ecm.model, pred.data){
 
 
 baggPred.simple <- function(ecm.model, pred.data){
+  bagOfWords <- bag.of.words(pred.data)
+  lbsSVM <- predict.svm(ecm.model$SVM, bagOfWords, getLevels())
+  lbsNN <- predict.nn(ecm.model$NN, bagOfWords, getLevels())
+  lbsLex <- predict.lex(ecm.model$NRC, pred.data)
+  lbsBayes <- predict.bayes(ecm.model$BAYES, bagOfWords)
+  
+  #Evaluation
+  
+  
   
 }
 
@@ -105,7 +114,11 @@ baggPred.expert <- function(ecm.model, pred.data){
 }
 
 baggPred.prob <- function(ecm.model, pred.data){
-  
+  bagOfWords <- bag.of.words(pred.data)
+  lbsSVM <- predict.svm.prob(ecm.model$SVM, bagOfWords, getLevels())
+  lbsNN <- predict.nn.prob(ecm.model$NN, bagOfWords, getLevels())
+  lbsLex <- predict.lex.prob(ecm.model$NRC, pred.data)
+  lbsBayes <- predict.bayes.prob(ecm.model$BAYES, bagOfWords)
 }
 
 
