@@ -178,7 +178,7 @@ preproccess.data <- function(data){
 # ================================= BAG OF WORDS ===========================================
 
 # CREATE THE BAG OF WORDS
-bag.of.words <- function(data, sparse = 0.999, init = FALSE){
+bag.of.words <- function(data, sparse = 0.999, init = FALSE, test = FALSE){
   docs <- Corpus(VectorSource(data$SIT))
   words.dict <- list()
   if ( init == TRUE ){
@@ -192,20 +192,24 @@ bag.of.words <- function(data, sparse = 0.999, init = FALSE){
   }
   
   mat <- as.matrix(dtm)
-  
-  # Delete all rows that have all columns in zero and normalize
-  row_sub <- apply(mat, 1, function(row) all(row ==0 ))
-  mat <- mat[!row_sub,]
-  mat <- scale(mat)
-  
-  bagOfWords <- cbind( mat, data$EMOT[!row_sub] )
+  if (!test){
+    # Delete all rows that have all columns in zero and normalize
+    row_sub <- apply(mat, 1, function(row) all(row ==0 ))
+    mat <- mat[!row_sub,]
+    mat <- scale(mat)
+    bagOfWords <- cbind( mat, data$EMOT[!row_sub] )
+  } else {
+    mat <- scale(mat)
+    bagOfWords <- cbind( mat, data$EMOT )
+  }
   
   colnames( bagOfWords )[ ncol(bagOfWords) ] <- "labels_model"
   bagOfWords <- as.data.frame(bagOfWords)
-  bagOfWords <- mutate_all(bagOfWords,funs(replace(., is.na(.), 0)))
+  #bagOfWords <- mutate_all(bagOfWords,funs(replace(., is.na(.), 0)))
+  bagOfWords[ is.na(bagOfWords) ] <- 0
   
   bagOfWords$labels_model <- factor(bagOfWords$labels_model)
-  levels(bagOfWords$labels_model) <- getLevels()
+  levels(bagOfWords$labels_model) <- getLevels(length(bagOfWords$labels_model))
   
   return(bagOfWords)
 }
@@ -283,8 +287,8 @@ setLevels <- function(lvls){
   datasetLvls <<- lvls
 }
 
-getLevels <- function(){
-  return(datasetLvls)
+getLevels <- function(n = length(datasetLvls)){
+  return(datasetLvls[1:n])
 }
 
 getLevelsNum <- function(){

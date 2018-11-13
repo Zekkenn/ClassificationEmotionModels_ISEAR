@@ -1,10 +1,10 @@
 # ======================================== IMPORTS =========================================
 
-this.dir <- dirname(parent.frame(2)$ofile)
-setwd(this.dir)
+#this.dir <- dirname(parent.frame(2)$ofile)
+#setwd(this.dir)
 
-source("data_loader.R")
-source("data_exploration.R")
+source("R code/data_loader.R")
+source("R code/data_exploration.R")
 source("R code/models/NN.R")
 source("R code/models/SVM.R")
 source("R code/models/NaiveBayes.R")
@@ -97,15 +97,19 @@ ecm.prediction <- function(ecm.model, pred.data){
 
 
 baggPred.simple <- function(ecm.model, pred.data){
-  bagOfWords <- bag.of.words(pred.data, sparse = 0.9999999)
+  pred.data <- pred.data[ pred.data$EMOT != "surprise", ]
+  bagOfWords <- bag.of.words(pred.data, test = TRUE)
   lbsSVM <- predict.svm(ecm.model$SVM, bagOfWords, list("joy" = "X1", "fear" = "X2", "anger" = "X3", "sadness" = "X4", "disgust" = "X5", "other" = "X6"))
   lbsNN <- predict.nn(ecm.model$NN, bagOfWords, getLevels())
   lbsLex <- predict.lex(ecm.model$NRC, pred.data)
   lbsBayes <- predict.bayes(ecm.model$BAYES, bagOfWords, getLevels())
   
   #Evaluation
-  pred <- class.ind(lbsSVM) + class.ind(lbsNN) +  class.ind(lbsBayes)
+  pred <- class.ind(lbsSVM) + class.ind(lbsNN) +  class.ind(lbsBayes) + class.ind(lbsLex)
   
+  pred <- factor(colnames(pred)[max.col(pred,ties.method="first")])
+  
+  return(pred)
   
 }
 

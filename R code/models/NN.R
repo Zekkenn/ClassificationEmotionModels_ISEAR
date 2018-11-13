@@ -38,7 +38,7 @@ pre_proc <- function(data){
 
 predict.nn <- function(modelNN, data, y){
   predNN <- predict.nn.prob(modelNN, data)
-  predNN <- max.col(pred_with$net.result)
+  predNN <- max.col(predNN$net.result)
   predNN <- factor( predNN )
   levels(predNN) <- y
   return(predNN)
