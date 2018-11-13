@@ -60,8 +60,15 @@ nrc_plots <- function(nrc_data, conf.matrix){
 }
 
 predict.lex <- function(modelLex, data){
-  pred <- "lol"
-  return(pred)
+  pred <- get_nrc_sentiment(data$SIT)
+  pred$other <- 0
+  pred <- pred[names(getLevels())]
+  nrc_prob <- prop.table(as.matrix(pred),1)
+  predict_emot <- colnames(nrc_prob)[max.col(nrc_prob,ties.method="first")]
+  predict_emot[is.na(predict_emot)] <- "other"
+  predict_emot <- factor(predict_emot)
+  levels(predict_emot) <- getLevels()
+  return(predict_emot)
 }
 
 # ISEAR LABELS TRANSFORMATION

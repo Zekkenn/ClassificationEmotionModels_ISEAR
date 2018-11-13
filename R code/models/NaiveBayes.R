@@ -40,8 +40,9 @@ plot.roc <- function(true_label, pred){
   
 }
 
-predcit.bayes <- function(modelBayes, data){
+predict.bayes <- function(modelBayes, data, y){
   predBayes <- predict(modelBayes, data)
+  levels(predBayes) <- y
   return(predBayes)
 }
 
