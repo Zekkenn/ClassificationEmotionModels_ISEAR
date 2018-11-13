@@ -17,6 +17,9 @@ source("R code/models/NRC_lexicon.R")
 
 # ===================================== TRAINING STAGE =====================================
 
+# dataSem <- getData.SemEval(path = "SemEval_14/AffectiveText.test")
+# dataIsear <- getData.ISEAR(path = "py_isear_dataset/isear.csv")
+#
 
 # X - A Chr Vector with Sentences or Documents
 # Y - A Chr Vector with the corresponding emotions
@@ -24,14 +27,22 @@ source("R code/models/NRC_lexicon.R")
 # PREPROCESS - A logical: should be the data preProcess
 # REPRES - A string specifying the type of data representation for training
 # TUNEBAGG - A String specifying the decision heuristic
+ecm.isear.preprare <- function(){
+  setLevels(list("joy" = "1", "fear" = "2", "anger" = "3", "sadness" = "4", "disgust" = "5", "shame" = "6", "guilt" = "7","other" = "8"))
+}
+
+ecm.semeval.preprare <- function(){
+  setLevels(list("joy" = "1", "fear" = "2", "anger" = "3", "sadness" = "4", "disgust" = "5", "other" = "6"))
+}
+
 ecm <- function(data, language = "English", preProcess = TRUE, repres = "Bag", tuneBagg = "Simple", dataSet = "ISEAR"){
   # Init
   switch (dataSet,
     ISEAR = {
-      setLevels(list("joy" = "1", "fear" = "2", "anger" = "3", "sadness" = "4", "disgust" = "5", "shame" = "6", "guilt" = "7","other" = "8"))
+      ecm.isear.preprare()
     },
     SemEval = {
-      setLevels(list("joy" = "1", "fear" = "2", "anger" = "3", "sadness" = "4", "disgust" = "5", "other" = "6"))
+      ecm.semeval.preprare()
     }
   )
   
@@ -110,9 +121,8 @@ ecm.prediction <- function(ecm.model, pred.data){
 
 
 baggPred.simple <- function(ecm.model, pred.data){
-  pred.data <- pred.data[ pred.data$EMOT != "surprise", ]
   bagOfWords <- bag.of.words(pred.data, test = TRUE)
-  lbsSVM <- predict.svm(ecm.model$SVM, bagOfWords, list("joy" = "X1", "fear" = "X2", "anger" = "X3", "sadness" = "X4", "disgust" = "X5", "other" = "X6"))
+  lbsSVM <- predict.svm(ecm.model$SVM, bagOfWords, list("joy" = "X1", "fear" = "X2", "anger" = "X3", "sadness" = "X4", "disgust" = "X5","other" = "X6"))
   lbsNN <- predict.nn(ecm.model$NN, bagOfWords, getLevels())
   lbsLex <- predict.lex(ecm.model$NRC, pred.data)
   lbsBayes <- predict.bayes(ecm.model$BAYES, bagOfWords, getLevels())
@@ -121,21 +131,42 @@ baggPred.simple <- function(ecm.model, pred.data){
   pred <- class.ind(lbsSVM) + class.ind(lbsNN) +  class.ind(lbsBayes) + class.ind(lbsLex)
   
   pred <- factor(colnames(pred)[max.col(pred,ties.method="first")])
+  levels(pred) <- getLevels()
   
   return(pred)
   
 }
 
 baggPred.expert <- function(ecm.model, pred.data){
+  bagOfWords <- bag.of.words(pred.data, test = TRUE)
+  lbsSVM <- predict.svm(ecm.model$SVM, bagOfWords, list("joy" = "X1", "fear" = "X2", "anger" = "X3", "sadness" = "X4", "disgust" = "X5","other" = "X6"))
+  lbsNN <- predict.nn(ecm.model$NN, bagOfWords, getLevels())
+  lbsLex <- predict.lex(ecm.model$NRC, pred.data)
+  lbsBayes <- predict.bayes(ecm.model$BAYES, bagOfWords, getLevels())
   
+  #Evaluation
+  pred <- class.ind(lbsSVM) + class.ind(lbsNN) +  class.ind(lbsBayes) + class.ind(lbsLex)
+  
+  pred <- factor(colnames(pred)[max.col(pred,ties.method="first")])
+  levels(pred) <- getLevels()
+  
+  return(pred)
 }
 
 baggPred.prob <- function(ecm.model, pred.data){
   bagOfWords <- bag.of.words(pred.data)
-  lbsSVM <- predict.svm.prob(ecm.model$SVM, bagOfWords, getLevels())
-  lbsNN <- predict.nn.prob(ecm.model$NN, bagOfWords, getLevels())
-  lbsLex <- predict.lex.prob(ecm.model$NRC, pred.data)
+  lbsSVM <- predict.svm.prob(ecm.model$SVM, bagOfWords)
+  lbsNN <- predict.nn.prob(ecm.model$NN, bagOfWords)
   lbsBayes <- predict.bayes.prob(ecm.model$BAYES, bagOfWords)
+  
+  colnames(lbsSVM) <- colnames(lbsBayes)
+  colnames(lbsNN) <- colnames(lbsBayes)
+  
+  pred <- lbsSVM + lbsNN + lbsBayes
+  
+  pred <- factor(colnames(pred)[max.col(pred,ties.method="first")])
+  levels(pred) <- getLevels()
+  return(pred)
 }
 
 

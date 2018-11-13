@@ -49,10 +49,11 @@ confusionMatrix( predNN, bagSem$labels_model )
 predLex <- 0
 
 #---------Evaluation----------------
-cnfBayes <- confusionMatrix( predBayes, bagSem$labels_model )
-mean(cnfBayes$byClass[,"Precision"])
-mean(cnfBayes$byClass[,"Recall"])
-mean(cnfBayes$byClass[,"F1"])
+cm <- confusionMatrix( predBayes, bagSem$labels_model )
+cm$byClass["Class: other",] <- 0
+mean(cm$byClass[,"Precision"])
+mean(cm$byClass[,"Recall"])
+mean(cm$byClass[,"F1"])
 
 #--------deep learning-------
 #h2o.init(nthreads=-1, max_mem_size="3G")

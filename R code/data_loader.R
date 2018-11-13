@@ -17,6 +17,13 @@ library("methods")
 # ================================ MAIN PREPARED DATA ======================================
 # ==========================================================================================
 
+# ------------------------------------------------------------------------------------------
+# --------------------------------- Global Variables ---------------------------------------
+# ------------------------------------------------------------------------------------------
+#Get Emotions based on the dataset
+datasetLvls <- c()
+datasetLvlsNum <- c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")
+
 # OBTAIN & PREPROCESS
 # type <- should be one of : {ISEAR,SemEval}
 getPrep.Data <- function(path = "", type = "ISEAR"){
@@ -193,7 +200,7 @@ bag.of.words <- function(data, sparse = 0.999, init = FALSE, test = FALSE){
   
   mat <- as.matrix(dtm)
   
-  if(test){
+  if(!test){
     # Delete all rows that have all columns in zero and normalize
     row_sub <- apply(mat, 1, function(row) all(row ==0 ))
     mat <- mat[!row_sub,]
@@ -202,12 +209,12 @@ bag.of.words <- function(data, sparse = 0.999, init = FALSE, test = FALSE){
     bagOfWords <- cbind( mat, data$EMOT[!row_sub] )
   } else {
     mat <- scale(mat)
-    bagOfWords <- cbind( mat, data$EMOT[!row_sub] )
+    bagOfWords <- cbind( mat, data$EMOT )
   }
   
   colnames( bagOfWords )[ ncol(bagOfWords) ] <- "labels_model"
   bagOfWords <- as.data.frame(bagOfWords)
-  bagOfWords <- mutate_all(bagOfWords,funs(replace(., is.na(.), 0)))
+  bagOfWords[ is.na(bagOfWords) ] <- 0
   
   bagOfWords$labels_model <- factor(bagOfWords$labels_model)
   levels(bagOfWords$labels_model) <- getLevels()
@@ -277,10 +284,6 @@ partition.data <- function(values, data){
 related.emots <- function(data1,data2){
   return(intersect(levels(data1$EMOT),levels(data2$EMOT)))
 }
-
-#Get Emotions based on the dataset
-datasetLvls <- c()
-datasetLvlsNum <- c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")
 
 #Example of code setLevels(levels(dataIsear$EMOT))
 # list("joy" = "1", "fear" = "2", "anger" = "3", "sadness" = "4", "disgust" = "5", "other" = "6")

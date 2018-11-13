@@ -46,6 +46,11 @@ predict.bayes <- function(modelBayes, data, y){
   return(predBayes)
 }
 
+predict.bayes.prob <- function(modelBayes, data){
+  predBayes <- predict(modelBayes, data, type="raw")
+  return(predBayes)
+}
+
 # Test 
 # data <- get.bagOfWords.allPartData("py_isear_dataset/isear.csv")
 # model.naivebayes <- train.naiveBayes(data[[1]])

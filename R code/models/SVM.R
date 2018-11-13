@@ -21,7 +21,7 @@ library(e1071)
 # workers=makeCluster(4,type="SOCK")
 # registerDoParallel(workers)
 
-train.svm <- function(data.train, type = "svmLinear", lvls = c("X1", "X2", "X3", "X4", "X5")){
+train.svm <- function(data.train, type = "svmLinear", lvls = list("joy" = "X1", "fear" = "X2", "anger" = "X3", "sadness" = "X4", "disgust" = "X5", "shame" = "X6", "guilt" = "X7")){
   ctrl <- trainControl(method = "cv", classProbs = TRUE)
   grid <- expand.grid(C = c(0.05, 0.1, 0.25, 0.5, 0.75))
   levels(data.train$labels_model) <- lvls
@@ -34,5 +34,11 @@ train.svm <- function(data.train, type = "svmLinear", lvls = c("X1", "X2", "X3",
 predict.svm <- function(modelSVM, data, y){
   predSVM <- predict(modelSVM, data)
   levels(predSVM) <- y
+  return(predSVM)
+}
+
+predict.svm.prob <- function(modelSVM, data) {
+  predSVM <- predict(modelSVM, data, type = "prob")
+  predSVM <- as.matrix(predSVM)
   return(predSVM)
 }
