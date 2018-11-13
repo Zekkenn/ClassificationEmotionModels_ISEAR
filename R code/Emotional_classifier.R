@@ -24,23 +24,36 @@ source("R code/models/NRC_lexicon.R")
 # PREPROCESS - A logical: should be the data preProcess
 # REPRES - A string specifying the type of data representation for training
 # TUNEBAGG - A String specifying the decision heuristic
-ecm <- function(x, y, language = "English", preProcess = TRUE, repres = "Bag", tuneBagg = "Simple"){
+ecm <- function(data, language = "English", preProcess = TRUE, repres = "Bag", tuneBagg = "Simple", dataSet = "ISEAR"){
   # Init
-  setLevels(levels(y))
+  switch (dataSet,
+    ISEAR = {
+      setLevels(list("joy" = "1", "fear" = "2", "anger" = "3", "sadness" = "4", "disgust" = "5", "shame" = "6", "guilt" = "7","other" = "8"))
+    },
+    SemEval = {
+      setLevels(list("joy" = "1", "fear" = "2", "anger" = "3", "sadness" = "4", "disgust" = "5", "other" = "6"))
+    }
+  )
   
   # PREPROCESSING STAGE
-  if(preProcess){  x <- preproccess.data(data.frame(SIT = x))  }
+  if(preProcess){  data <- preproccess.data(data)  }
+  
+  data <- partition.data( c(0.8, 1), data )
+  dataTrain <- data[[1]]
+  dataTest <- data[[2]]
   
   # CHARACTERISTICS REPRESENTATION STAGE
-  x.rep <- x
+  x.rep.train <- list(); x.rep.test <- list()
   switch(repres,
       Bag={ # Bag Of Words Case
-        x.rep <- bag.of.words(data.frame(SIT = x))
+        x.rep.train <- bag.of.words(dataTrain)
+        x.rep.test <- bag.of.words(dataTest, test = TRUE)
       }
   )
   
+  
   # MODEL CONSTRUCTION & TRAINING STAGE
-  emot_classifier <- ecm.train(x,x.rep,y,tuneBagg)
+  emot_classifier <- ecm.train(x,x.rep.train,y,tuneBagg)
   
   # SAVE MODEL
   saveRDS(emot_classifier, file = "models.save/emot_classifier.rds")
