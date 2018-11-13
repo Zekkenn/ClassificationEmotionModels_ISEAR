@@ -5,10 +5,10 @@ setwd(this.dir)
 
 source("data_loader.R")
 source("data_exploration.R")
-source("models/NN.R")
-source("models/SVM.R")
-source("models/NaiveBayes.R")
-source("models/NRC_lexicon.R")
+source("R code/models/NN.R")
+source("R code/models/SVM.R")
+source("R code/models/NaiveBayes.R")
+source("R code/models/NRC_lexicon.R")
 
 # ==========================================================================================
 # ================================ EMOTIONAL CLASIFICATION MODEL ===========================
@@ -97,6 +97,15 @@ ecm.prediction <- function(ecm.model, pred.data){
 
 
 baggPred.simple <- function(ecm.model, pred.data){
+  bagOfWords <- bag.of.words(pred.data, sparse = 0.9999999)
+  lbsSVM <- predict.svm(ecm.model$SVM, bagOfWords, list("joy" = "X1", "fear" = "X2", "anger" = "X3", "sadness" = "X4", "disgust" = "X5", "other" = "X6"))
+  lbsNN <- predict.nn(ecm.model$NN, bagOfWords, getLevels())
+  lbsLex <- predict.lex(ecm.model$NRC, pred.data)
+  lbsBayes <- predict.bayes(ecm.model$BAYES, bagOfWords, getLevels())
+  
+  #Evaluation
+  pred <- class.ind(lbsSVM) + class.ind(lbsNN) +  class.ind(lbsBayes)
+  
   
 }
 
@@ -105,7 +114,11 @@ baggPred.expert <- function(ecm.model, pred.data){
 }
 
 baggPred.prob <- function(ecm.model, pred.data){
-  
+  bagOfWords <- bag.of.words(pred.data)
+  lbsSVM <- predict.svm.prob(ecm.model$SVM, bagOfWords, getLevels())
+  lbsNN <- predict.nn.prob(ecm.model$NN, bagOfWords, getLevels())
+  lbsLex <- predict.lex.prob(ecm.model$NRC, pred.data)
+  lbsBayes <- predict.bayes.prob(ecm.model$BAYES, bagOfWords)
 }
 
 

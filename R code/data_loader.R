@@ -278,6 +278,7 @@ datasetLvls <- c()
 datasetLvlsNum <- c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")
 
 #Example of code setLevels(levels(dataIsear$EMOT))
+# list("joy" = "1", "fear" = "2", "anger" = "3", "sadness" = "4", "disgust" = "5", "other" = "6")
 setLevels <- function(lvls){
   datasetLvls <<- lvls
 }

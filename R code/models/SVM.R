@@ -35,5 +35,4 @@ predict.svm <- function(modelSVM, data, y){
   predSVM <- predict(modelSVM, data)
   levels(predSVM) <- y
   return(predSVM)
-  
 }
