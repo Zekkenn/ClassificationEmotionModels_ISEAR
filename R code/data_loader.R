@@ -299,3 +299,14 @@ getLevelsNum <- function(){
   return( datasetLvlsNum[1:length(datasetLvls)] )
 }
 
+# Compare two datasets
+compareDatasets <- function(set1, set2){
+  dataWordsSet1 <- DocumentTermMatrix( Corpus(VectorSource(set1$SIT)) )$dimnames$Terms
+  dataWordsSet2 <- DocumentTermMatrix( Corpus(VectorSource(set2$SIT)) )$dimnames$Terms
+  
+  inters <- intersect(dataWordsSet1, dataWordsSet2)
+  diffSet1 <- setdiff(dataWordsSet1, dataWordsSet2)
+  diffSet2 <- setdiff(dataWordsSet2, dataWordsSet1)
+  
+}
+
