@@ -10,20 +10,21 @@ library(mldr)
 
 # NRC EMOTION ANALYSIS
 
-nrc_analysis <- function(data){
+nrc_analysis <- function(x,y){
+  
+  data <- data.frame(SIT = x, EMOT = y, stringsAsFactors = FALSE)
+  data$EMOT <- factor(data$EMOT)
   
   # TEST NRC MODEL 
   nrc_data <- get_nrc_sentiment(data$SIT)
-  nrc_data$other <- rowMeans(nrc_data[, c(2,7,8)]) ## Falta Generalizar
-  nrc_data <- nrc_data[,c(1,3,4,5,6)] ## Falta Generalizar
+  nrc_data <- nrc_data[,levels(data$EMOT)]
+  # nrc_data$other <- rowMeans(nrc_data[, -levels(data$EMOT)])
 
   # PREDICTION - BASED ON HIGHEST PROBABILITY
   nrc_prob <- prop.table(as.matrix(nrc_data),1)
   predict_emot <- data.frame( EMOT = colnames(nrc_prob)[max.col(nrc_prob,ties.method="first")])
-  levels(predict_emot$EMOT)
   
   # CONFUSION MATRIX
-  data$EMOT <- factor(data$EMOT, levels = c("joy","fear","anger","sadness","disgust")) ## Falta Generalizar
   cm <- confusionMatrix(predict_emot$EMOT,data$EMOT, mode = "everything")
   
   modelNRC <- list( lexicon = nrc_data, train.prediction = predict_emot, train.result = cm)

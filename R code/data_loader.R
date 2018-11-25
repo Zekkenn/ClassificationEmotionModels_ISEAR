@@ -144,10 +144,10 @@ getData.SemEval <- function(path, type = "test"){
 # ==========================================================================================
 
 # DATA PRE_PROCESS
-preproccess.data <- function(data){
+preproccess.data <- function(data, stemming = TRUE){
 
   # DELETE ROWS WITH 1 LENGTH SENTENCES
-  pos <- which(sapply(tokenize_words(data$SIT), length) == 1)
+  pos <- which(sapply(tokenize_words(data$SIT), length) %in% c(0,1,2))
   if (length(pos) != 0) {data <- data[-pos,]}
   
   # DELETE ALL NON-ALPHANUMERIC CHARACTERS & additional whitespace
@@ -159,18 +159,18 @@ preproccess.data <- function(data){
   # data$SIT <- sapply(data$SIT, tolower)
   
   # TM - STEMMING
-  docs <- Corpus(VectorSource(data$SIT))
-  docs <- tm_map(docs, content_transformer(removeNumbers)) # Remove numbers
-  docs <- tm_map(docs, content_transformer(tolower)) # Transform words to lower
-  docs <- tm_map(docs, content_transformer(removeWords), stopwords("english")) # Remove english common stopwords e.g "the", "is", "of", etc
-  docs <- tm_map(docs, content_transformer(removePunctuation)) # Remove punctuations
-  docs <- tm_map(docs, stripWhitespace) # Eliminate extra white spaces
+  corpus <- Corpus(VectorSource(data$SIT))
+  corpus.clean <- corpus %>%
+    tm_map(content_transformer(tolower)) %>%
+    tm_map(removePunctuation) %>%
+    tm_map(removeNumbers) %>%
+    tm_map(removeWords, stopwords(kind="en")) %>%
+    tm_map(stripWhitespace)
   
-  docs <- tm_map(docs, stemDocument) # Text stemming (reduces words to their root form)
-  #docs <- tm_map(docs, removeWords, c("clintonemailcom", "stategov", "hrod")) # Remove additional stopwords
+  corpus.clean <- ifelse(stemming, tm_map(corpus.clean, stemDocument), corpus.clean)
   
   # GET STEMMING SENTENCES BACK TO DATA
-  data$SIT <- sapply(docs, identity)
+  data$SIT <- sapply(corpus.clean, identity)
   
   return(data)
 }

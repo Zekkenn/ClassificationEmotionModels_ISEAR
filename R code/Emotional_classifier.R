@@ -1,25 +1,24 @@
 # ======================================== IMPORTS =========================================
 
-#this.dir <- dirname(parent.frame(2)$ofile)
-#setwd(this.dir)
+this.dir <- dirname(parent.frame(2)$ofile)
+setwd(this.dir)
 
-source("R code/data_loader.R")
-source("R code/data_exploration.R")
-source("R code/models/NN.R")
-source("R code/models/SVM.R")
-source("R code/models/NaiveBayes.R")
-source("R code/models/NRC_lexicon.R")
+source("data_loader.R")
+source("data_exploration.R")
+source("models/NN.R")
+source("models/SVM.R")
+source("models/NaiveBayes.R")
+source("models/NRC_lexicon.R")
 
 # ==========================================================================================
 # ================================ EMOTIONAL CLASIFICATION MODEL ===========================
 # ==========================================================================================
 
+# raw.isear <- getData.ISEAR("./py_isear_dataset/isear.csv")
+# raw.semEval <- getData.SemEval("./SemEval_14/AffectiveText.test")
+
 
 # ===================================== TRAINING STAGE =====================================
-
-# dataSem <- getData.SemEval(path = "SemEval_14/AffectiveText.test")
-# dataIsear <- getData.ISEAR(path = "py_isear_dataset/isear.csv")
-#
 
 # X - A Chr Vector with Sentences or Documents
 # Y - A Chr Vector with the corresponding emotions
@@ -27,44 +26,27 @@ source("R code/models/NRC_lexicon.R")
 # PREPROCESS - A logical: should be the data preProcess
 # REPRES - A string specifying the type of data representation for training
 # TUNEBAGG - A String specifying the decision heuristic
-ecm.isear.preprare <- function(){
-  setLevels(list("joy" = "1", "fear" = "2", "anger" = "3", "sadness" = "4", "disgust" = "5", "shame" = "6", "guilt" = "7","other" = "8"))
-}
-
-ecm.semeval.preprare <- function(){
-  setLevels(list("joy" = "1", "fear" = "2", "anger" = "3", "sadness" = "4", "disgust" = "5", "other" = "6"))
-}
-
-ecm <- function(data, language = "English", preProcess = TRUE, repres = "Bag", tuneBagg = "Simple", dataSet = "ISEAR"){
+ecm <- function(x, y, language = "English", preProcess = TRUE, repres = "Bag", tuneBagg = "Simple", dataSet = "ISEAR"){
   # Init
-  switch (dataSet,
-    ISEAR = {
-      ecm.isear.preprare()
-    },
-    SemEval = {
-      ecm.semeval.preprare()
-    }
-  )
+  setLevels(levels(y))
+  
+  data <- data.frame(SIT = x, EMOT = y, stringsAsFactors = FALSE)
+  data$EMOT <- factor(data$EMOT)
   
   # PREPROCESSING STAGE
   if(preProcess){  data <- preproccess.data(data)  }
   
-  data <- partition.data( c(0.8, 1), data )
-  dataTrain <- data[[1]]
-  dataTest <- data[[2]]
-  
   # CHARACTERISTICS REPRESENTATION STAGE
-  x.rep.train <- list(); x.rep.test <- list()
   switch(repres,
       Bag={ # Bag Of Words Case
-        x.rep.train <- bag.of.words(dataTrain)
-        x.rep.test <- bag.of.words(dataTest, test = TRUE)
+        x.rep.train <- DocumentTermMatrix(Corpus(VectorSource(data$SIT)))
+        # x.rep.train <- bag.of.words(data)
       }
   )
   
   
   # MODEL CONSTRUCTION & TRAINING STAGE
-  emot_classifier <- ecm.train(x,x.rep.train,y,tuneBagg)
+  emot_classifier <- ecm.train(data$SIT,x.rep.train,data$EMOT,tuneBagg)
   
   # SAVE MODEL
   saveRDS(emot_classifier, file = "models.save/emot_classifier.rds")
@@ -80,15 +62,17 @@ ecm <- function(data, language = "English", preProcess = TRUE, repres = "Bag", t
 ecm.train <- function(x, x.rep, y, tuneBagg){
 
   # MACHINE LEARNING MODELS
-  modelBayes <- train.naiveBayes(x.rep)
-  modelSVM <- train.svm(x.rep)
-  modelNN <- train.nn(x.rep)
+  modelBayes <- train.naiveBayes(x.rep,y)
+  modelSVM <- train.svm(x.rep, y)
+  ## modelNN <- train.nn(x.rep, y)
+  modelNN <- c("nothing here")
   
   # KNOWLEDGE MODELS
-  modelNRC <- nrc_analysis(data.frame(SIT = x, EMOT = y))
+  modelNRC <- nrc_analysis(x, y)
 
   modelBagg <- list(tuneBagg = tuneBagg,
                     BAYES = modelBayes, SVM = modelSVM, NN = modelNN, NRC = modelNRC)
+  
   return(modelBagg)
 }
 
@@ -175,7 +159,6 @@ baggPred.prob <- function(ecm.model, pred.data){
 # ================================== EVALUATION STAGE ======================================
 
 
-#
 ecm.evaluation <- function(data.prediction, data.reference){
   
   # CONFUSION MATRIX

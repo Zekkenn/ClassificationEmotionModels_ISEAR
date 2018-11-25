@@ -3,14 +3,28 @@
 library(e1071)
 library(multiROC)
 library(dummies)
+library(bnlearn)
 
-train.naiveBayes <- function( data ){
-  x <- subset( data, select = -labels_model )
-  y <- data$labels_model
-  return( naiveBayes( x, y ) )
+train.naiveBayes <- function( data, emot ){
+  data.train <- apply(data, 2, convert_count)
+  
+  search_grid <- expand.grid(
+    usekernel = c(TRUE, FALSE),
+    fL = 0:1,
+    adjust = seq(0, 5, by = 1))
+  
+  train_control <- trainControl(
+    method = "cv", 
+    number = 10)
+  
+  fit <- train(
+    x = as.data.frame(data.train), y = emot, method = "nb",
+    trControl = train_control,
+    tuneGrid = search_grid)
+  return(fit)
 }
 
-#
+
 plot.roc <- function(true_label, pred){
   true_label <- dummies::dummy(true_label)
   true_label <- data.frame(true_label)
@@ -51,9 +65,10 @@ predict.bayes.prob <- function(modelBayes, data){
   return(predBayes)
 }
 
-# Test 
-# data <- get.bagOfWords.allPartData("py_isear_dataset/isear.csv")
-# model.naivebayes <- train.naiveBayes(data[[1]])
-# test <- subset( data[[1]], select = -labels_model )
 
-# 
+# Function to convert the word frequencies to yes (presence) and no (absence) labels
+convert_count <- function(x) {
+  y <- ifelse(x > 0, 1,0)
+  y <- factor(y, levels=c(0,1), labels=c("No", "Yes"))
+  y
+}

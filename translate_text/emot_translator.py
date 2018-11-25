@@ -22,14 +22,17 @@ ISEAR_PATH_IN = r'C:\Users\Esteban\Documents\Google Cloud Projects\python-docs-s
 ISEAR_PATH_OUT = r'C:\Users\Esteban\Documents\Google Cloud Projects\python-docs-samples\translate\cloud-client\ISEAR\isear_spanish.csv'
 
 def translate_semEval(semEval_xml):
-    tree = ET.parse(semEval_xml)  
-    root = tree.getroot()
-
-    # Change sentences
-    for elem in root.iter('instance'):
-        elem.text = translate_text('es',elem.text)
-
-    tree.write(SEMEVAL_PATH_OUT)
+    with open(semEval_xml, 'r') as xml_file:
+        tree = ET.parse(xml_file)
+        root = tree.getroot()
+        # Change sentences
+        count = 1
+        for elem in root.iter('instance'):
+            elem.text = translate_text('es',elem.text)
+            if count == 3:
+                break
+            count += 1
+        tree.write(SEMEVAL_PATH_OUT)
 
 def translate_isear(isear_csv):
 
@@ -68,5 +71,5 @@ def translate_text(target, text):
 
 
 if __name__ == "__main__":
-    # translate_semEval(SEMEVAL_PATH_IN)
-    translate_isear(ISEAR_PATH_IN)
+    translate_semEval(SEMEVAL_PATH_IN)
+    # translate_isear(ISEAR_PATH_IN)

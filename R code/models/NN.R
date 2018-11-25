@@ -32,8 +32,10 @@ getEcuation_labels <- function(n){
   return( lbs[1:n] )
 }
 
-train.nn <- function(data){
+train.nn <- function(x, y){
   
+  data <- as.data.frame(as.matrix(x))
+  data$labels_model <- factor(y)
   train <- pre_proc(data, length(levels(data$labels_model) ))
   
   n <- sprintf("`%s`", names(train))
