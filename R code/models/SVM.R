@@ -22,10 +22,9 @@ library(e1071)
 # registerDoParallel(workers)
 
 train.svm <- function(x, y){
-  type = "svmRadial"
+  type = "svmLinear"
   ctrl <- trainControl(method = "cv", number = 10, classProbs=TRUE)
-  grid <- expand.grid(sigma = c(.01, .015, 0.2),
-                      C = c(0.05,0.1,0.25,0.5,0.75,0.9,1))
+  grid <- expand.grid(C = c(0.1,0.25,0.5,0.75,1,2))
   
   fit <- train(
     x = as.data.frame(as.matrix(x)), y = y, method = type,

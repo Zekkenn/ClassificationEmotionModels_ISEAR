@@ -144,33 +144,37 @@ getData.SemEval <- function(path, type = "test"){
 # ==========================================================================================
 
 # DATA PRE_PROCESS
-preproccess.data <- function(data, stemming = TRUE){
+preproccess.data <- function(data, stemming = TRUE, language = "english"){
 
   # DELETE ROWS WITH 1 LENGTH SENTENCES
   pos <- which(sapply(tokenize_words(data$SIT), length) %in% c(0,1,2))
   if (length(pos) != 0) {data <- data[-pos,]}
+  lg <- ifelse(language=='english',"en",language)
   
-  # DELETE ALL NON-ALPHANUMERIC CHARACTERS & additional whitespace
-  #data$SIT <- sapply(data$SIT, function(x) gsub("[^a-zA-Z0-9']", " ", x)) # non-alphanumeric characters
-  #data$SIT <- sapply(data$SIT, function(x) gsub("\\s+", " ", x)) # additional whitespace
-  #data$SIT <- sapply(data$SIT, function(x) gsub(" $", "", x)) # end Whitespace
+  # CLEAN ALL NON-ALPHANUMERIC CHARACTERS & additional whitespace
+  data$SIT <- sapply(data$SIT, function(x) gsub("[^a-zA-Z0-9']", " ", x)) # non-alphanumeric characters
+  data$SIT <- sapply(data$SIT, function(x) gsub("\\s+", " ", x)) # additional whitespace
+  data$SIT <- sapply(data$SIT, function(x) gsub(" $", "", x)) # end Whitespace
   
-  # LOWER CASE
-  # data$SIT <- sapply(data$SIT, tolower)
   
-  # TM - STEMMING
+  # TM
   corpus <- Corpus(VectorSource(data$SIT))
   corpus.clean <- corpus %>%
     tm_map(content_transformer(tolower)) %>%
     tm_map(removePunctuation) %>%
     tm_map(removeNumbers) %>%
-    tm_map(removeWords, stopwords(kind="en")) %>%
+    tm_map(removeWords, stopwords(kind=lg)) %>%
     tm_map(stripWhitespace)
   
-  corpus.clean <- ifelse(stemming, tm_map(corpus.clean, stemDocument), corpus.clean)
-  
-  # GET STEMMING SENTENCES BACK TO DATA
-  data$SIT <- sapply(corpus.clean, identity)
+  # GET STEMMING SENTENCES FROM DATA
+  if (stemming) {
+    str("Stemming Process ...")
+    corpus.clean <- tm_map(corpus.clean, PlainTextDocument)  # needs to come before stemming
+    corpus.clean <- tm_map(corpus.clean, stemDocument, language)
+    data$SIT <- sapply(corpus.clean, identity)$content
+  }else{
+    data$SIT <- sapply(corpus.clean, identity)
+  }
   
   return(data)
 }

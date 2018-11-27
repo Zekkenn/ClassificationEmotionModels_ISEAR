@@ -14,9 +14,12 @@ source("models/NRC_lexicon.R")
 # ================================ EMOTIONAL CLASIFICATION MODEL ===========================
 # ==========================================================================================
 
-# raw.isear <- getData.ISEAR("./py_isear_dataset/isear.csv")
-# raw.semEval <- getData.SemEval("./SemEval_14/AffectiveText.test")
-
+# set.seed(34)
+# ss <- getRaw.complete("../py_isear_dataset/isear.csv","../SemEval_14/AffectiveText.test")
+# isear.raw <- partition.data(c(0.8,1),ss[[1]])
+# isear.raw.train <- isear.raw[[1]]
+# isear.raw.test <- isear.raw[[2]]
+# model.ecm <- ecm(isear.raw.train$SIT,isear.raw.train$EMOT,stem = FALSE)
 
 # ===================================== TRAINING STAGE =====================================
 
@@ -26,17 +29,19 @@ source("models/NRC_lexicon.R")
 # PREPROCESS - A logical: should be the data preProcess
 # REPRES - A string specifying the type of data representation for training
 # TUNEBAGG - A String specifying the decision heuristic
-ecm <- function(x, y, language = "English", preProcess = TRUE, repres = "Bag", tuneBagg = "Simple", dataSet = "ISEAR"){
+ecm <- function(x, y, language = "english", preProcess = TRUE, repres = "Bag", tuneBagg = "Simple", stem = TRUE){
   # Init
   setLevels(levels(y))
   
+  str("Initializing Model ....")
   data <- data.frame(SIT = x, EMOT = y, stringsAsFactors = FALSE)
   data$EMOT <- factor(data$EMOT)
-  
+
   # PREPROCESSING STAGE
-  if(preProcess){  data <- preproccess.data(data)  }
+  if(preProcess){  data <- preproccess.data(data,stemming = stem,language=language)  }
   
   # CHARACTERISTICS REPRESENTATION STAGE
+  str("Representation Stage ...")
   switch(repres,
       Bag={ # Bag Of Words Case
         x.rep.train <- DocumentTermMatrix(Corpus(VectorSource(data$SIT)))
@@ -49,6 +54,7 @@ ecm <- function(x, y, language = "English", preProcess = TRUE, repres = "Bag", t
   emot_classifier <- ecm.train(data$SIT,x.rep.train,data$EMOT,tuneBagg)
   
   # SAVE MODEL
+  str("Saving Model ...")
   saveRDS(emot_classifier, file = "models.save/emot_classifier.rds")
   
   return(emot_classifier)
@@ -62,8 +68,11 @@ ecm <- function(x, y, language = "English", preProcess = TRUE, repres = "Bag", t
 ecm.train <- function(x, x.rep, y, tuneBagg){
 
   # MACHINE LEARNING MODELS
+  str("Training NaiveBayes ...")
   modelBayes <- train.naiveBayes(x.rep,y)
+  str("Training SVM ...")
   modelSVM <- train.svm(x.rep, y)
+  str("Training NN ...")
   ## modelNN <- train.nn(x.rep, y)
   modelNN <- c("nothing here")
   

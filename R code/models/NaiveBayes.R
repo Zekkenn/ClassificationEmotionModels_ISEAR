@@ -9,9 +9,9 @@ train.naiveBayes <- function( data, emot ){
   data.train <- apply(data, 2, convert_count)
   
   search_grid <- expand.grid(
-    usekernel = c(TRUE, FALSE),
+    usekernel = c(FALSE),
     fL = 0:1,
-    adjust = seq(0, 5, by = 1))
+    adjust = seq(0,5,by = 1))
   
   train_control <- trainControl(
     method = "cv", 
