@@ -44,7 +44,7 @@ ecm <- function(x, y, language = "english", preProcess = TRUE, repres = "Bag", t
   str("Representation Stage ...")
   switch(repres,
       Bag={ # Bag Of Words Case
-        x.rep.train <- DocumentTermMatrix(Corpus(VectorSource(data$SIT)))
+          x.rep.train <- DocumentTermMatrix(Corpus(VectorSource(data$SIT)))
         # x.rep.train <- bag.of.words(data)
       }
   )
@@ -73,8 +73,7 @@ ecm.train <- function(x, x.rep, y, tuneBagg){
   str("Training SVM ...")
   modelSVM <- train.svm(x.rep, y)
   str("Training NN ...")
-  ## modelNN <- train.nn(x.rep, y)
-  modelNN <- c("nothing here")
+  modelNN <- train.nn(x.rep, y)
   
   # KNOWLEDGE MODELS
   modelNRC <- nrc_analysis(x, y)
@@ -93,17 +92,24 @@ ecm.train <- function(x, x.rep, y, tuneBagg){
 
 # ECM.MODEL - Bagging model with the respective decision heuristic & models
 # PRED.DATA - DATA OR SENTENCES TO BE PREDICTED
-ecm.prediction <- function(ecm.model, pred.data){
+ecm.prediction <- function(ecm.model, x, y, preProcess = TRUE, repres = "Bag", stem = TRUE, language = "english"){
+  
+  data <- data.frame(SIT = x, EMOT = y, stringsAsFactors = FALSE)
+  data$EMOT <- factor(data$EMOT)
+  
+  # PREPROCESSING STAGE
+  if(preProcess){  data <- preproccess.data(data,stemming = stem,language=language)  }
+  
   emotional.response <- NULL
   switch (ecm.model$tuneBagg,
           Simple = {
-            emotional.response <- baggPred.simple(ecm.model,pred.data)
+            emotional.response <- baggPred.simple(ecm.model, data$SIT, data$EMOT)
           },
           Expert = {
-            emotional.response <- baggPred.expert(ecm.model,pred.data)
+            emotional.response <- baggPred.expert(ecm.model, data$SIT, data$EMOT)
           },
           Probabilities = {
-            emotional.response <- baggPred.prob(ecm.model,pred.data)
+            emotional.response <- baggPred.prob(ecm.model, data$SIT, data$EMOT)
           }
   )
   
@@ -113,12 +119,15 @@ ecm.prediction <- function(ecm.model, pred.data){
 
 
 
-baggPred.simple <- function(ecm.model, pred.data){
-  bagOfWords <- bag.of.words(pred.data, test = TRUE)
-  lbsSVM <- predict.svm(ecm.model$SVM, bagOfWords, list("joy" = "X1", "fear" = "X2", "anger" = "X3", "sadness" = "X4", "disgust" = "X5","other" = "X6"))
-  lbsNN <- predict.nn(ecm.model$NN, bagOfWords, getLevels())
-  lbsLex <- predict.lex(ecm.model$NRC, pred.data)
-  lbsBayes <- predict.bayes(ecm.model$BAYES, bagOfWords, getLevels())
+baggPred.simple <- function(ecm.model, x){
+  
+  lbsSVM <- predict.svm(ecm.model$SVM, x)
+  
+  lbsNN <- predict.nn(ecm.model$NN, x)
+  
+  lbsLex <- predict.lex(ecm.model$NRC, x)
+  
+  lbsBayes <- predict.bayes(ecm.model$BAYES, x)
   
   #Evaluation
   pred <- class.ind(lbsSVM) + class.ind(lbsNN) +  class.ind(lbsBayes) + class.ind(lbsLex)

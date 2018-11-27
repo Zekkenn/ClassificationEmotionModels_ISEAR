@@ -59,5 +59,15 @@ mean(cm$byClass[,"F1"])
 #h2o.init(nthreads=-1, max_mem_size="3G")
 #h2o.removeAll()
 
+set.seed(34)
+ss <- getRaw.complete("../py_isear_dataset/isear.csv","../SemEval_14/AffectiveText.test")
+isear.raw <- partition.data(c(0.8,1),ss[[1]])
+isear.raw.train <- isear.raw[[1]]
+isear.raw.test <- isear.raw[[2]]
+
+data <- data.frame(SIT = isear.raw.test$SIT, EMOT = isear.raw.test$EMOT, stringsAsFactors = FALSE)
+data$EMOT <- factor(data$EMOT)
+data <- preproccess.data(data,stemming = FALSE,language="english")
+x.rep.train <- DocumentTermMatrix(Corpus(VectorSource(data$SIT)))
 
 

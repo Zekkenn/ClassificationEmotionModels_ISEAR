@@ -36,8 +36,16 @@ train.svm <- function(x, y){
 
 # y is a list with the labels of the dataset, example:
 # y <- list("joy" = "X1", "fear" = "X2", "anger" = "X3", "sadness" = "X4", "disgust" = "X5")
-predict.svm <- function(modelSVM, data, y){
-  predSVM <- predict(modelSVM, data)
+predict.svm <- function(modelSVM, data.svm, y){
+  words.dict <- colnames(modelSVM$trainingData)
+  words.dict <- sapply(words.dict, function(x) gsub("[^a-zA-Z0-9']", " ", x)) # non-alphanumeric characters
+  words.dict <- sapply(words.dict, function(x) gsub("\\s+", " ", x)) # additional whitespace
+  words.dict <- sapply(words.dict, function(x) gsub(" $", "", x)) # end Whitespace
+  words.dict <- as.vector(words.dict)
+  data.svm <- DocumentTermMatrix(Corpus(VectorSource(data.svm)), list( dictionary = words.dict ))
+  data.svm <- as.data.frame(as.matrix(data.svm))
+  data.svm[ is.na(data.svm) ] <- 0
+  predSVM <- predict(modelSVM, data.svm)
   levels(predSVM) <- y
   return(predSVM)
 }
