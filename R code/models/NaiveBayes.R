@@ -8,17 +8,17 @@ library(bnlearn)
 train.naiveBayes <- function( data, emot ){
   data.train <- apply(data, 2, convert_count)
   
-  search_grid <- expand.grid(
+    search_grid <- expand.grid(
     usekernel = c(FALSE),
     fL = 0:1,
     adjust = seq(0,5,by = 1))
   
   train_control <- trainControl(
     method = "cv", 
-    number = 10)
+    classProbs=TRUE, savePred=T)
   
   fit <- train(
-    x = as.data.frame(data.train), y = emot, method = "bayesglm",
+    x = as.data.frame(data.train), y = emot, method = "nb",
     trControl = train_control,
     tuneGrid = search_grid)
   return(fit)
@@ -34,7 +34,7 @@ plot.roc <- function(true_label, pred){
   
   pred <- data.frame(pred)
   colnames(pred) <- c("joy", "fear", "anger", "sadness", "disgust")
-  colnames(pred) <- paste(colnames(pred), "_pred_SVM_Test")
+  colnames(pred) <- paste(colnames(pred), "_pred_Lexicon")
   final_df <- cbind(true_label, pred)
   roc_res <- multi_roc(final_df, force_diag=T)
   
@@ -51,7 +51,6 @@ plot.roc <- function(true_label, pred){
           legend.background = element_rect(fill=NULL, size=0.5, 
                                            linetype="solid", colour ="black"))
   
-  return(roc_res)
 }
 
 predict.bayes <- function(modelBayes, data, y){

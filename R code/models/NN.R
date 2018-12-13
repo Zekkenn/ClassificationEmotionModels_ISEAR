@@ -37,7 +37,7 @@ train.nn <- function(x, y){
   data.nn <- as.data.frame(as.matrix(x))
   data.nn$labels_model <- factor(y)
   
-  ctrl <- trainControl(method = "cv", classProbs=TRUE)
+  ctrl <- trainControl(method = "cv", classProbs=TRUE, savePred=T)
   grid <- expand.grid(.decay = c(0.5, 0.1) )
   nn <- train(
     labels_model ~., data = data.nn, method = "nnet",

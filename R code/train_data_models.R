@@ -81,4 +81,9 @@ data.test.is$EMOT <- factor(data.test.is$EMOT)
 data.test.is <- preproccess.data(data.test.is,stemming = FALSE,language="english")
 x.rep.test <- DocumentTermMatrix(Corpus(VectorSource(data.test.is$SIT)))
 
+data <- data.frame(SIT = ss[[1]]$SIT, EMOT = ss[[1]]$EMOT, stringsAsFactors = FALSE)
+data$EMOT <- factor(data$EMOT)
+data <- preproccess.data(data,stemming = FALSE,language="english")
+x.rep <- DocumentTermMatrix(Corpus(VectorSource(data$SIT)))
+
 

@@ -7,6 +7,17 @@ library(ggplot2)
 library(mldr)
 
 #source('~/ClassificationEmotionModels_ISEAR/R code/data_exploration.R')
+# ============================== ROCR METRICS ===================
+# $ AUC        :List of 1
+# ..$ SVM_Test:List of 7
+# .. ..$ joy     : num 0.665
+# .. ..$ fear    : num 0.667
+# .. ..$ anger   : num 0.63
+# .. ..$ sadness : num 0.593
+# .. ..$ disgust : num 0.572
+# .. ..$ macro   : num 0.625
+# .. ..$ micro   : num 0.615
+
 
 # NRC EMOTION ANALYSIS
 
@@ -60,16 +71,25 @@ nrc_plots <- function(nrc_data, conf.matrix){
   conf.matrix
 }
 
-predict.lex <- function(modelLex, data){
+predict.lex <- function(data){
   pred <- get_nrc_sentiment(data$SIT)
   pred$other <- 0
-  pred <- pred[names(getLevels())]
+  pred <- pred[getLevels()]
   nrc_prob <- prop.table(as.matrix(pred),1)
   predict_emot <- colnames(nrc_prob)[max.col(nrc_prob,ties.method="first")]
   predict_emot[is.na(predict_emot)] <- "other"
   predict_emot <- factor(predict_emot)
   levels(predict_emot) <- getLevels()
   return(predict_emot)
+}
+
+predict.lex.prob <- function(data){
+  pred <- get_nrc_sentiment(data$SIT)
+  pred$other <- 0
+  pred <- pred[getLevels()]
+  nrc_prob <- prop.table(as.matrix(pred),1)
+  nrc_prob[ is.na(nrc_prob) ] <- 0
+  return(nrc_prob)
 }
 
 # ISEAR LABELS TRANSFORMATION

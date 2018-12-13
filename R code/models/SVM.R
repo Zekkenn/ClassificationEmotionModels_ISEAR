@@ -43,12 +43,12 @@ library(e1071)
 # Parallel Processing Windows 
 # library(snow)
 # library(doParallel)
-# workers=makeCluster(2,type="SOCK")
+# workers=makeCluster(4,type="SOCK")
 # registerDoParallel(workers)
 
 train.svm <- function(x, y){
   type = "svmLinear"
-  ctrl <- trainControl(method = "cv", classProbs=TRUE)
+  ctrl <- trainControl(method = "cv", classProbs=TRUE, savePred=T)
   grid <- expand.grid(C = c(0.1,0.25,0.5,0.75,1))
   data.svm <- as.data.frame( as.matrix(x) )
   data.svm$labels_model <- y
