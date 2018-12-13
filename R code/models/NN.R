@@ -34,11 +34,16 @@ getEcuation_labels <- function(n){
 
 train.nn <- function(x, y){
   
-  data <- as.data.frame(as.matrix(x))
-  data$labels_model <- factor(y)
-  data$content <- NULL
+  data.nn <- as.data.frame(as.matrix(x))
+  data.nn$labels_model <- factor(y)
   
-  nn <- nnet(labels_model~., data=data, size=1, maxit=1000, MaxNWts = 15000)
+  ctrl <- trainControl(method = "cv", classProbs=TRUE)
+  grid <- expand.grid(.decay = c(0.5, 0.1) )
+  nn <- train(
+    labels_model ~., data = data.nn, method = "nnet",
+    trControl = ctrl, linout = 0, MaxNWts=20100, maxit=500 )
+  
+  # nn <- nnet(labels_model~., data=data, size=1, maxit=1000, MaxNWts = 15000)
   
   # train <- pre_proc(data, length(levels(data$labels_model) ))
   # 
@@ -73,8 +78,6 @@ predict.nn <- function(modelNN, data.nn, y){
 
 predict.nn.prob <- function(modelNN, data.nn){
   data.nn <- getData.nn(modelNN, data.nn)
-  data.nn <- as.data.frame(as.matrix(data.nn))
-  data.nn[ is.na(data.nn) ] <- 0
   pred_with <- predict( modelNN, data.nn )
   return(pred_with)
 }

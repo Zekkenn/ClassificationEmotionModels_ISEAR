@@ -18,7 +18,7 @@ train.naiveBayes <- function( data, emot ){
     number = 10)
   
   fit <- train(
-    x = as.data.frame(data.train), y = emot, method = "nb",
+    x = as.data.frame(data.train), y = emot, method = "bayesglm",
     trControl = train_control,
     tuneGrid = search_grid)
   return(fit)
@@ -34,7 +34,7 @@ plot.roc <- function(true_label, pred){
   
   pred <- data.frame(pred)
   colnames(pred) <- c("joy", "fear", "anger", "sadness", "disgust")
-  colnames(pred) <- paste(colnames(pred), "_pred_NeuralNet")
+  colnames(pred) <- paste(colnames(pred), "_pred_SVM_Test")
   final_df <- cbind(true_label, pred)
   roc_res <- multi_roc(final_df, force_diag=T)
   
@@ -51,11 +51,16 @@ plot.roc <- function(true_label, pred){
           legend.background = element_rect(fill=NULL, size=0.5, 
                                            linetype="solid", colour ="black"))
   
-  
+  return(roc_res)
 }
 
 predict.bayes <- function(modelBayes, data, y){
-  data.test <- apply(data, 2, convert_count)
+  words.dict <- sort(colnames(emot_classifier$BAYES$trainingData))[-1]
+  words.dict <- as.vector(words.dict)
+  x.rep.pred <- DocumentTermMatrix(Corpus(VectorSource(data)), list( dictionary = words.dict ))
+  x.rep.pred <- as.matrix(x.rep.pred)
+  x.rep.pred[ is.na(x.rep.pred) ] <- 0
+  data.test <- apply(x.rep.pred, 2, convert_count)
   predBayes <- predict(modelBayes, as.data.frame(data.test))
   levels(predBayes) <- y
   return(predBayes)
