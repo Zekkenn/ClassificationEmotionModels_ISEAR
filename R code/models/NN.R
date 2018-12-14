@@ -34,15 +34,25 @@ getEcuation_labels <- function(n){
 
 train.nn <- function(x, y){
   
-  data <- as.data.frame(as.matrix(x))
-  data$labels_model <- factor(y)
-  train <- pre_proc(data, length(levels(data$labels_model) ))
+  data.nn <- as.data.frame(as.matrix(x))
+  data.nn$labels_model <- factor(y)
   
-  n <- sprintf("`%s`", names(train))
-  f <- ecuation(n)
+  ctrl <- trainControl(method = "cv", classProbs=TRUE, savePred=T)
+  grid <- expand.grid(.decay = c(0.5, 0.1) )
+  nn <- train(
+    labels_model ~., data = data.nn, method = "nnet",
+    trControl = ctrl, linout = 0, MaxNWts=20100, maxit=500 )
   
-  nn <- neuralnet(f, data = train, hidden = c(100), act.fct = "logistic", linear.output = FALSE, lifesign = "minimal")
+  # nn <- nnet(labels_model~., data=data, size=1, maxit=1000, MaxNWts = 15000)
   
+  # train <- pre_proc(data, length(levels(data$labels_model) ))
+  # 
+  # n <- sprintf("`%s`", names(train))
+  # f <- ecuation(n)
+  # 
+  # nn <- neuralnet(f, data = train, hidden = c(100), act.fct = "logistic", linear.output = FALSE, lifesign = "minimal")
+  # 
+  return(nn)
 }
 
 pre_proc <- function(data, n){
@@ -52,19 +62,24 @@ pre_proc <- function(data, n){
   return(data)
 }
 
-predict.nn <- function(modelNN, data, y){
-  predNN <- predict.nn.prob(modelNN, data)
+getData.nn <- function(modelNN, data.nn){
+  words.dict <- attr(modelNN$terms, "term.labels")
+  data.nn <- DocumentTermMatrix(Corpus(VectorSource(data.nn)), list(dictionary = as.vector(words.dict)))
+  return(data)
+}
+
+predict.nn <- function(modelNN, data.nn, y){
+  predNN <- predict.nn.prob(modelNN, data.nn)
   predNN <- max.col(predNN)
   predNN <- factor( predNN )
   levels(predNN) <- y
   return(predNN)
 }
 
-predict.nn.prob <- function(modelNN, data){
-  size <- dim(data)[2]-1
-  test <- data[,1:size]
-  pred_with <- compute( modelNN, test )
-  return(pred_with$net.result)
+predict.nn.prob <- function(modelNN, data.nn){
+  data.nn <- getData.nn(modelNN, data.nn)
+  pred_with <- predict( modelNN, data.nn )
+  return(pred_with)
 }
 
 # ====== TEST ========

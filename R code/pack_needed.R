@@ -32,6 +32,10 @@ install.packages("pracma")
 
 install.packages("sets")
 
+install.packages("kernlab")
+install.packages("bnlearn")
+install.packages("klaR")
+
 # ================================================================== #
 # == Uncomment when you need == #
 

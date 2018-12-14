@@ -25,13 +25,18 @@ modelNN <- train.nn(bagIsear)
 
 #--------Save Models--------
 saveRDS(modelBayes, file = "R code/models.save/modelBayesSem.rds")
-saveRDS(modelSVM, file = "R code/models.save/modelSVMSem.rds")
+saveRDS(modelSVM, file = "models.save/modelSVMSem_test1.rds")
 saveRDS(modelNN, file = "R code/models.save/modelNNSem.rds")
 
 #--------Load Models--------
-modelSVM <- readRDS("R code/models.save/modelSVMSem.rds")
+modelSVM <- readRDS("models.save/modelSVMSem_test1.rds")
 modelBayes <- readRDS("R code/models.save/modelBayesSem.rds")
 modelNN <- readRDS("R code/models.save/modelNNSem.rds")
+
+#--------Load Models Composed--------
+emot_classifier <- readRDS("models.save/emot_classifier/emot_classifier.rds")
+emot_classifier_spa <- readRDS("models.save/emot_classifier_spa/emot_classifier.rds")
+emot_classifier_stem <- readRDS("models.save/emot_classifier_stem/emot_classifier.rds")
 
 #-------Composition---------
 predSVM <- predict(modelSVM, bagSem)
@@ -59,5 +64,26 @@ mean(cm$byClass[,"F1"])
 #h2o.init(nthreads=-1, max_mem_size="3G")
 #h2o.removeAll()
 
+# Charge data
+set.seed(34)
+ss <- getRaw.complete("../py_isear_dataset/isear.csv","../SemEval_14/AffectiveText.test")
+isear.raw <- partition.data(c(0.8,1),ss[[1]])
+isear.raw.train <- isear.raw[[1]]
+isear.raw.test <- isear.raw[[2]]
+
+data <- data.frame(SIT = isear.raw.train$SIT, EMOT = isear.raw.train$EMOT, stringsAsFactors = FALSE)
+data$EMOT <- factor(data$EMOT)
+data <- preproccess.data(data,stemming = FALSE,language="english")
+x.rep.train <- DocumentTermMatrix(Corpus(VectorSource(data$SIT)))
+
+data.test.is <- data.frame(SIT = isear.raw.test$SIT, EMOT = isear.raw.test$EMOT, stringsAsFactors = FALSE)
+data.test.is$EMOT <- factor(data.test.is$EMOT)
+data.test.is <- preproccess.data(data.test.is,stemming = FALSE,language="english")
+x.rep.test <- DocumentTermMatrix(Corpus(VectorSource(data.test.is$SIT)))
+
+data <- data.frame(SIT = ss[[1]]$SIT, EMOT = ss[[1]]$EMOT, stringsAsFactors = FALSE)
+data$EMOT <- factor(data$EMOT)
+data <- preproccess.data(data,stemming = FALSE,language="english")
+x.rep <- DocumentTermMatrix(Corpus(VectorSource(data$SIT)))
 
 
