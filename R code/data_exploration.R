@@ -15,6 +15,10 @@ emot.colors <- function(amount){
   return(cols[1:amount])
 }
 
+emot.colors.isis <- function(){
+  return(c("#00BF6F","#507CB6","#F9BE00","#6BC8CD","#E87ADA","#7D5E90","#93CEBA","#C7B879","#DB4D5C","#E89B7D"))
+}
+
 emot.colors.semeval <- function(){
   return(c("#93CEBA","#E89B7D","#ADB5CC","#F0A1CE","#B6D077","#E2792D"))
 }
@@ -25,22 +29,24 @@ emot.colors.semeval <- function(){
 explore.data <- function(sentences,emotions){
   
   #COMMON PALETTE
-  emot.palette <- emot.colors(length(levels(emotions)))
-  if (length(levels(emotions))){emot.palette <- emot.colors.semeval()}
+  #emot.palette <- emot.colors(length(levels(emotions)))
+  #if (length(levels(emotions))){emot.palette <- emot.colors.semeval()}
+  emot.palette <- emot.colors.isis()
   
   # EMOTION FRECUENCIES
   visualize_data(emotions,emot.palette)
+  #visualize.idf(sentences,emotions,emot.palette)
   
   # ANALYSIS OF WORDS ON SENTENCES
   write("WORDS ON SENTENCES",stdout())
-  words <- tokenize_words(sentences)
-  visualize.nwords(words,emotions,emot.palette,"words")
+  #words <- tokenize_words(sentences)
+  #visualize.nwords(words,emotions,emot.palette,"words")
   
   # ANALYSIS OF PHRASES ON SENTENCES
   write("PHRASES ON SENTENCES",stdout())
-  phrases <- tokenize_sentences(sentences)
-  visualize.nwords(phrases,emotions,emot.palette,"phrases")
-  
+  #phrases <- tokenize_sentences(sentences)
+  #visualize.nwords(phrases,emotions,emot.palette,"phrases")
+
   # WORDCLOUD
   generate.wordcloud(sentences,emotions,emot.palette)
 }
@@ -95,10 +101,11 @@ visualize.nwords <- function(words,emots,emot.palette,part.of.whole = "words"){
     geom_density(adjust=1.5 , alpha=0.5) +
     scale_fill_manual(values=emot.palette) +
     xlab(part.of.whole)
+
   total.dens.words <- ggplot(data=data.words,aes(x=n.words, group=emot, fill=emot)) + 
     geom_density(adjust=1.5 , alpha=0.5) +
     scale_fill_manual(values=emot.palette) +
-    xlim(0,summary(data.words$n.words)[[5]]) +
+    #xlim(0,summary(data.words$n.words)[[5]]) +
     xlab(part.of.whole) +
     theme(legend.position="none")
   
@@ -146,7 +153,15 @@ generate.wordcloud <- function(sentences, emots, emot.palette, data.title = "Mos
   data.freq <- as.matrix(dtm)
   colnames(data.freq) <- emots
   
-  combine.byEmot <- function(e){apply(data.freq[,which(emots == e)], 1, sum)}
+  combine.byEmot <- function(e){
+    data <- c()
+    if (is.null(ncol(data.freq[,which(emots == e)]))) {
+      data <- data.freq[,which(emots == e)]
+    }else{
+      data <- apply(data.freq[,which(emots == e)], 1, sum)
+    }
+    return(data)
+  }
   
   combine.data.freq <- sapply(levels(emots), combine.byEmot) %>% as.matrix()
   
@@ -195,4 +210,48 @@ compare.data <- function(dataX, dataY, Pre.dataX, Pre.dataY){
     layout(boxmode = "group")
   print(words.comp.byEmot)
   
+}
+
+visualize.idf <- function(sentences,emotions,emot.palette){
+  
+  data.words <- DocumentTermMatrix(Corpus(VectorSource(sentences)))
+  data.words <- as.matrix(data.words)
+  idf <- log(nrow(data.words)/colSums(data.words))
+  rr <- t(t(data.words) * (idf))
+  data.rr <- data.frame(SIT = rowSums(rr), EMOT = emotions)
+  data.idf <- aggregate(data.rr$SIT, by=list(EMOT=data.rr$EMOT), FUN=sum)
+  result.idf <- as.vector(data.idf$x)
+  levels(result.idf) <- levels(data.idf$EMOT)
+  
+  freq <- round(as.vector(result.idf) / sum(as.vector(result.idf)), 3)
+  cum_freq <- cumsum(freq)
+  
+  # New margins
+  def_par <- par()
+  par(mar=c(5,5,4,5))
+  
+  pc = barplot(as.vector(result.idf),
+               width = 1, space = 0.2, border = NA, axes = F,
+               ylim = c(0, 1.05 * max(as.vector(result.idf), na.rm = T)), 
+               ylab = "Inverse Document Frecuency" , cex.names = 0.7, 
+               names.arg = levels(result.idf),
+               main = "Frecuencia de Ocurrencia de Palabras en Emociones",
+               col = emot.palette)
+  
+  # anotate left axis
+  axis(side = 2, at = c(0, as.vector(result.idf)), las = 1, col.axis = "grey62", col = "grey62", tick = T, cex.axis = 0.8)
+  
+  # frame plot
+  box( col = "grey62")
+  
+  # Cumulative Frequency Lines 
+  px <- cum_freq * max(as.vector(result.idf), na.rm = T)
+  lines(pc, px, type = "b", cex = 0.7, pch = 19, col="cyan4")
+  
+  # Annotate Right Axis
+  axis(side = 4, at = c(0, px), labels = paste(c(0, round(cum_freq * 100)) ,"%",sep=""), 
+       las = 1, col.axis = "grey62", col = "cyan4", cex.axis = 0.8, col.axis = "cyan4")
+  
+  # restoring default paramenter
+  par(def_par)
 }
