@@ -53,7 +53,8 @@ getRaw.complete <- function(isear.path,semeval.path){
   semeval.test <- raw.semEval[raw.semEval$EMOT %in% emots.betw,]
   semeval.test$EMOT <- factor(semeval.test$EMOT, levels = emots.betw)
   
-  return(list(isear.train,semeval.test))
+  #return(list(isear.train,semeval.test))
+  return(list(raw.isear,raw.semEval))
 }
 
 getPre.complete <- function(isear.path,semeval.path){

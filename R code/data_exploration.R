@@ -29,9 +29,9 @@ emot.colors.semeval <- function(){
 explore.data <- function(sentences,emotions){
   
   #COMMON PALETTE
-  #emot.palette <- emot.colors(length(levels(emotions)))
+  emot.palette <- emot.colors(length(levels(emotions)))
   #if (length(levels(emotions))){emot.palette <- emot.colors.semeval()}
-  emot.palette <- emot.colors.isis()
+  #emot.palette <- emot.colors.isis()
   
   # EMOTION FRECUENCIES
   visualize_data(emotions,emot.palette)

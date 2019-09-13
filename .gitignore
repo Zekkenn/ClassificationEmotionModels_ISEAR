@@ -1,3 +1,5 @@
 # exclude everything from results
 R code/models.save/*
+R code/.Rhistory
+.Rhistory
 !R code/models.save
